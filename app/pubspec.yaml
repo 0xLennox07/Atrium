@@ -13,7 +13,6 @@ dependencies:
   connectivity_plus: ^6.1.0
   core_models:
   core_networking:
-  core_player:
   core_profile:
   core_router:
   core_storage:

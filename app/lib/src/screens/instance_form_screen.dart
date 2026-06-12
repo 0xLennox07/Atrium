@@ -159,7 +159,10 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
           children: <Widget>[
             DropdownButtonFormField<ServiceKind>(
               initialValue: _kind,
-              decoration: const InputDecoration(labelText: 'Service'),
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Service',
+              ),
               items: <DropdownMenuItem<ServiceKind>>[
                 for (final ServiceKind k in ServiceKind.values)
                   DropdownMenuItem<ServiceKind>(
@@ -174,6 +177,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
             TextFormField(
               controller: _name,
               decoration: InputDecoration(
+                border: const OutlineInputBorder(),
                 labelText: 'Name',
                 hintText: 'e.g. Home ${_kind.displayName}',
               ),
@@ -190,6 +194,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
             TextFormField(
               controller: _localUrl,
               decoration: InputDecoration(
+                border: const OutlineInputBorder(),
                 labelText: 'Local URL',
                 hintText: 'http://192.168.1.10:${_kind.defaultPort}',
               ),
@@ -201,6 +206,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
             TextFormField(
               controller: _externalUrl,
               decoration: const InputDecoration(
+                border: OutlineInputBorder(),
                 labelText: 'External URL',
                 hintText: 'https://sonarr.example.com',
               ),
@@ -211,7 +217,10 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
             const SizedBox(height: Insets.md),
             DropdownButtonFormField<UrlMode>(
               initialValue: _urlMode,
-              decoration: const InputDecoration(labelText: 'URL selection'),
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'URL selection',
+              ),
               items: const <DropdownMenuItem<UrlMode>>[
                 DropdownMenuItem<UrlMode>(
                   value: UrlMode.auto,
@@ -264,7 +273,10 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
         return <Widget>[
           TextFormField(
             controller: _apiKey,
-            decoration: const InputDecoration(labelText: 'API key'),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'API key',
+            ),
             autocorrect: false,
             validator: (String? v) =>
                 (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -275,6 +287,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
           TextFormField(
             controller: _apiKey,
             decoration: const InputDecoration(
+              border: OutlineInputBorder(),
               labelText: 'Plex token (X-Plex-Token)',
             ),
             autocorrect: false,
@@ -287,7 +300,10 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
         return <Widget>[
           TextFormField(
             controller: _username,
-            decoration: const InputDecoration(labelText: 'Username'),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Username',
+            ),
             autocorrect: false,
             textInputAction: TextInputAction.next,
             validator: (String? v) =>
@@ -296,7 +312,10 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
           const SizedBox(height: Insets.md),
           TextFormField(
             controller: _password,
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Password',
+            ),
             obscureText: true,
             validator: (String? v) =>
                 (v == null || v.isEmpty) ? 'Required' : null,

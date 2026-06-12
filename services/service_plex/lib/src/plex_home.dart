@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
-import 'package:core_player/core_player.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -161,81 +158,22 @@ class _ItemsGrid extends ConsumerWidget {
     );
   }
 
-  Future<void> _openItem(
+  void _openItem(
     BuildContext context,
     PlexApi api,
     PlexMetadata item,
-  ) async {
+  ) {
     if (!_playableTypes.contains(item.type)) {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => _FolderScreen(instance: instance, item: item),
-          ),
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _FolderScreen(instance: instance, item: item),
         ),
       );
       return;
     }
 
-    // Resolve the file part (may need a metadata round-trip); show a spinner.
-    unawaited(
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      ),
-    );
-    String? partKey;
-    String? error;
-    try {
-      partKey = await api.resolvePartKey(item);
-    } catch (_) {
-      error = 'Could not load this item.';
-    }
-    if (!context.mounted) {
-      return;
-    }
-    Navigator.of(context).pop(); // dismiss spinner
-
-    if (partKey == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'No playable file for this item.')),
-      );
-      return;
-    }
-
-    final Duration resume = Duration(milliseconds: item.viewOffset ?? 0);
-    // rootNavigator: the player must cover the bottom nav shell.
-    unawaited(
-      Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(
-        builder: (_) => AtriumPlayerScreen(
-          spec: PlaybackSpec(
-            url: api.streamUrl(partKey!),
-            title: item.title,
-            startPosition: resume,
-            onStarted: (Duration p) => api.reportTimeline(
-              item.ratingKey,
-              state: 'playing',
-              timeMs: p.inMilliseconds,
-              durationMs: item.duration,
-            ),
-            onProgress: (Duration p, bool paused) => api.reportTimeline(
-              item.ratingKey,
-              state: paused ? 'paused' : 'playing',
-              timeMs: p.inMilliseconds,
-              durationMs: item.duration,
-            ),
-            onStopped: (Duration p) => api.reportTimeline(
-              item.ratingKey,
-              state: 'stopped',
-              timeMs: p.inMilliseconds,
-              durationMs: item.duration,
-            ),
-          ),
-        ),
-      ),
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Playback is handled by the official app.')),
     );
   }
 }
@@ -293,14 +231,6 @@ class _PosterCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: <Widget>[
                   _poster(theme),
-                  if (_playableTypes.contains(item.type))
-                    const Center(
-                      child: Icon(
-                        Icons.play_circle_outline,
-                        size: 40,
-                        color: Colors.white70,
-                      ),
-                    ),
                   if (watched)
                     Positioned(
                       top: 4,

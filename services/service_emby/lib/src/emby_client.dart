@@ -108,7 +108,7 @@ class EmbyClient {
             'ParentId': parentId,
             'SortBy': 'SortName',
             'SortOrder': 'Ascending',
-            'Fields': 'PrimaryImageAspectRatio',
+            'Fields': 'PrimaryImageAspectRatio,ImageTags',
             'ImageTypeLimit': 1,
             'EnableImageTypes': 'Primary',
             'Limit': 200,
@@ -117,72 +117,179 @@ class EmbyClient {
         return EmbyItemsResult.fromJson(resp.data as Map<String, dynamic>).items;
       });
 
+  Future<List<EmbyItem>> getResumeItems() => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Users/$_userId/Items/Resume',
+          queryParameters: <String, dynamic>{
+            'Limit': 24,
+            'MediaTypes': 'Video',
+            'Fields': 'PrimaryImageAspectRatio,Overview,ImageTags',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        return EmbyItemsResult.fromJson(
+          resp.data as Map<String, dynamic>,
+        ).items;
+      });
+
+  Future<List<EmbyItem>> getNextUp() => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Shows/NextUp',
+          queryParameters: <String, dynamic>{
+            'UserId': _userId,
+            'Limit': 24,
+            'Fields': 'PrimaryImageAspectRatio,Overview,ImageTags',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        return EmbyItemsResult.fromJson(
+          resp.data as Map<String, dynamic>,
+        ).items;
+      });
+
+  Future<List<EmbyItem>> searchItems(String query) => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Users/$_userId/Items',
+          queryParameters: <String, dynamic>{
+            'SearchTerm': query,
+            'Limit': 50,
+            'Recursive': true,
+            'IncludeItemTypes': 'Series,Movie,Episode',
+            'Fields': 'PrimaryImageAspectRatio,Overview',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        return EmbyItemsResult.fromJson(
+          resp.data as Map<String, dynamic>,
+        ).items;
+      });
+
+  Future<List<EmbyItem>> getFavorites() => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Users/$_userId/Items',
+          queryParameters: <String, dynamic>{
+            'Filters': 'IsFavorite',
+            'Recursive': true,
+            'Limit': 24,
+            'Fields': 'PrimaryImageAspectRatio,Overview,ImageTags',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        return EmbyItemsResult.fromJson(
+          resp.data as Map<String, dynamic>,
+        ).items;
+      });
+
+  Future<EmbyUserData> markFavorite(String itemId, bool isFavorite) => _guarded(() async {
+        final Response<dynamic> resp = isFavorite 
+            ? await _dio.post<dynamic>('/Users/$_userId/FavoriteItems/$itemId')
+            : await _dio.delete<dynamic>('/Users/$_userId/FavoriteItems/$itemId');
+            
+        return EmbyUserData.fromJson(
+          resp.data as Map<String, dynamic>,
+        );
+      });
+
+  Future<List<EmbyItem>> getLatestItems() => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Users/$_userId/Items/Latest',
+          queryParameters: <String, dynamic>{
+            'Limit': 20,
+            'Fields': 'PrimaryImageAspectRatio,Overview',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        final List<dynamic> list = resp.data as List<dynamic>;
+        return list
+            .map((dynamic e) => EmbyItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      });
+
+  Future<EmbyItem> getItemDetails(String itemId) => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Users/$_userId/Items/$itemId',
+          queryParameters: <String, dynamic>{
+            'Fields': 'Overview,People,CommunityRating,OfficialRating,RunTimeTicks',
+          },
+        );
+        return EmbyItem.fromJson(resp.data as Map<String, dynamic>);
+      });
+
+  Future<List<EmbyItem>> getSeasons(String seriesId) => _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Shows/$seriesId/Seasons',
+          queryParameters: <String, dynamic>{
+            'UserId': _userId,
+            'Fields': 'PrimaryImageAspectRatio,Overview',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        return EmbyItemsResult.fromJson(
+          resp.data as Map<String, dynamic>,
+        ).items;
+      });
+
+  Future<List<EmbyItem>> getEpisodes(String seriesId, String seasonId) =>
+      _guarded(() async {
+        final Response<dynamic> resp = await _dio.get<dynamic>(
+          '/Shows/$seriesId/Episodes',
+          queryParameters: <String, dynamic>{
+            'SeasonId': seasonId,
+            'UserId': _userId,
+            'Fields': 'PrimaryImageAspectRatio,Overview,RunTimeTicks,CommunityRating,ImageTags',
+            'ImageTypeLimit': 1,
+            'EnableImageTypes': 'Primary',
+          },
+        );
+        return EmbyItemsResult.fromJson(
+          resp.data as Map<String, dynamic>,
+        ).items;
+      });
+
   String get _baseStr => baseUrl.toString().replaceAll(RegExp(r'/+$'), '');
 
-  /// Absolute direct-play stream URL. Same shape as Jellyfin; auth rides as
-  /// `api_key`. media_kit (libmpv) decodes the original file locally.
-  String streamUrl(String itemId) {
-    return '$_baseStr/Videos/$itemId/stream'
-        '?static=true&mediaSourceId=$itemId'
-        '&deviceId=$deviceId&api_key=$_token';
-  }
 
-  /// Emby counts time in 100-nanosecond ticks (1s = 10,000,000 ticks).
-  static int _ticks(Duration d) => d.inMicroseconds * 10;
-
-  /// Marks an item as now-playing. Best-effort.
-  Future<void> reportPlaybackStart(
-    String itemId, {
-    Duration position = Duration.zero,
-  }) =>
-      _postQuietly('/Sessions/Playing', <String, dynamic>{
-        'ItemId': itemId,
-        'PositionTicks': _ticks(position),
-        'PlayMethod': 'DirectStream',
-        'CanSeek': true,
-      });
-
-  /// Persists the current resume point.
-  Future<void> reportPlaybackProgress(
-    String itemId, {
-    required Duration position,
-    required bool isPaused,
-  }) =>
-      _postQuietly('/Sessions/Playing/Progress', <String, dynamic>{
-        'ItemId': itemId,
-        'PositionTicks': _ticks(position),
-        'IsPaused': isPaused,
-        'PlayMethod': 'DirectStream',
-        'CanSeek': true,
-      });
-
-  /// Marks playback stopped and stores the final resume point.
-  Future<void> reportPlaybackStopped(
-    String itemId, {
-    required Duration position,
-  }) =>
-      _postQuietly('/Sessions/Playing/Stopped', <String, dynamic>{
-        'ItemId': itemId,
-        'PositionTicks': _ticks(position),
-      });
-
-  Future<void> _postQuietly(String path, Map<String, dynamic> body) async {
-    try {
-      await _dio.post<dynamic>(path, data: body);
-    } on DioException {
-      // Reporting is best-effort; ignore failures.
-    }
-  }
 
   /// Builds a primary-image (poster) URL for [item], or null if it has none.
   String? imageUrl(EmbyItem item, {int maxHeight = 420}) {
-    final String? tag = item.imageTags['Primary'];
-    if (tag == null) {
-      return null;
-    }
     final String key = _token == null ? '' : '&api_key=$_token';
+
+    // Prefer the Series poster (anime cover) over the episode thumbnail.
+    if (item.type == 'Episode' && item.seriesId != null) {
+      final String tagParam = item.seriesPrimaryImageTag != null
+          ? '&tag=${item.seriesPrimaryImageTag}'
+          : '';
+      return '$_baseStr/Items/${item.seriesId}/Images/Primary'
+          '?quality=90&maxHeight=$maxHeight$tagParam$key';
+    }
+
+    if (item.imageTags.containsKey('Primary')) {
+      final String tag = item.imageTags['Primary']!;
+      return '$_baseStr/Items/${item.id}/Images/Primary'
+          '?tag=$tag&quality=90&maxHeight=$maxHeight$key';
+    }
+
+    if (item.seriesPrimaryImageTag != null && item.seriesId != null) {
+      final String tag = item.seriesPrimaryImageTag!;
+      return '$_baseStr/Items/${item.seriesId}/Images/Primary'
+          '?tag=$tag&quality=90&maxHeight=$maxHeight$key';
+    }
+
+    if (item.parentPrimaryImageTag != null && item.parentId != null) {
+      final String tag = item.parentPrimaryImageTag!;
+      return '$_baseStr/Items/${item.parentId}/Images/Primary'
+          '?tag=$tag&quality=90&maxHeight=$maxHeight$key';
+    }
+
+    // Fallback: If no tags were provided in the payload, try fetching the primary image directly.
     return '$_baseStr/Items/${item.id}/Images/Primary'
-        '?tag=$tag&quality=90&maxHeight=$maxHeight$key';
+        '?quality=90&maxHeight=$maxHeight$key';
   }
 
   void close() => _dio.close(force: true);

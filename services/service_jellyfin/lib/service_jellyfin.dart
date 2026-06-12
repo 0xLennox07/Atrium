@@ -9,6 +9,7 @@ library;
 export 'src/jellyfin_client.dart';
 export 'src/jellyfin_home.dart';
 export 'src/jellyfin_providers.dart';
+export 'src/jellyfin_search.dart';
 export 'src/models/jellyfin_auth.dart';
 export 'src/models/jellyfin_item.dart';
 export 'src/models/jellyfin_view.dart';

@@ -55,3 +55,83 @@ final FutureProviderFamily<List<EmbyItem>, (Instance, String)>
           await ref.watch(embyClientProvider(instance).future);
       return client.getItems(libraryId);
     });
+
+final FutureProviderFamily<List<EmbyItem>, Instance>
+    embyResumeItemsProvider =
+    FutureProvider.family<List<EmbyItem>, Instance>((
+      Ref ref,
+      Instance instance,
+    ) async {
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getResumeItems();
+    });
+
+final FutureProviderFamily<List<EmbyItem>, Instance>
+    embyNextUpProvider =
+    FutureProvider.family<List<EmbyItem>, Instance>((
+      Ref ref,
+      Instance instance,
+    ) async {
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getNextUp();
+    });
+
+final FutureProviderFamily<List<EmbyItem>, Instance>
+    embyLatestItemsProvider =
+    FutureProvider.family<List<EmbyItem>, Instance>((
+      Ref ref,
+      Instance instance,
+    ) async {
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getLatestItems();
+    });
+
+final FutureProviderFamily<List<EmbyItem>, Instance>
+    embyFavoritesProvider =
+    FutureProvider.family<List<EmbyItem>, Instance>((
+      Ref ref,
+      Instance instance,
+    ) async {
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getFavorites();
+    });
+
+final FutureProviderFamily<EmbyItem, (Instance, String)>
+    embyItemDetailsProvider =
+    FutureProvider.family<EmbyItem, (Instance, String)>((
+      Ref ref,
+      (Instance, String) key,
+    ) async {
+      final (Instance instance, String itemId) = key;
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getItemDetails(itemId);
+    });
+
+final FutureProviderFamily<List<EmbyItem>, (Instance, String)>
+    embySeasonsProvider =
+    FutureProvider.family<List<EmbyItem>, (Instance, String)>((
+      Ref ref,
+      (Instance, String) key,
+    ) async {
+      final (Instance instance, String seriesId) = key;
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getSeasons(seriesId);
+    });
+
+final FutureProviderFamily<List<EmbyItem>, (Instance, String, String)>
+    embyEpisodesProvider =
+    FutureProvider.family<List<EmbyItem>, (Instance, String, String)>((
+      Ref ref,
+      (Instance, String, String) key,
+    ) async {
+      final (Instance instance, String seriesId, String seasonId) = key;
+      final EmbyClient client =
+          await ref.watch(embyClientProvider(instance).future);
+      return client.getEpisodes(seriesId, seasonId);
+    });

@@ -15,7 +15,6 @@ workspace:
   - packages/core_models
   - packages/core_storage
   - packages/core_networking
-  - packages/core_player
   - packages/core_profile
   - packages/core_ui
   - packages/core_router

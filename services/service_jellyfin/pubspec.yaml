@@ -12,7 +12,6 @@ dependencies:
   collection: ^1.18.0
   core_models:
   core_networking:
-  core_player:
   core_profile:
   core_ui:
   dio: ^5.7.0

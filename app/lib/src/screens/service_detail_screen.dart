@@ -38,6 +38,19 @@ class ServiceDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(instance.name),
         actions: <Widget>[
+          if (instance.kind == ServiceKind.emby || instance.kind == ServiceKind.jellyfin)
+            IconButton(
+              tooltip: 'Search',
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                showSearch<void>(
+                  context: context,
+                  delegate: instance.kind == ServiceKind.emby 
+                    ? EmbySearchDelegate(instance: instance)
+                    : JellyfinSearchDelegate(instance: instance) as SearchDelegate<void>,
+                );
+              },
+            ),
           IconButton(
             tooltip: 'Edit',
             icon: const Icon(Icons.edit_outlined),

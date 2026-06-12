@@ -16,3 +16,5 @@ class JellyfinView with _$JellyfinView {
   factory JellyfinView.fromJson(Map<String, dynamic> json) =>
       _$JellyfinViewFromJson(json);
 }
+
+
