@@ -177,20 +177,17 @@ class EmbyItemsGrid extends ConsumerWidget {
 
   void _openItem(BuildContext context, EmbyClient client, EmbyItem item) {
     if (embyContainerTypes.contains(item.type)) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => EmbyFolderScreen(instance: instance, item: item),
-        ),
+      // pushScreen = root navigator; branch-navigator pushes get swept by
+      // GoRouter shell rebuilds.
+      pushScreen<void>(
+        context,
+        EmbyFolderScreen(instance: instance, item: item),
       );
       return;
     }
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => EmbyItemDetailScreen(
-          instance: instance,
-          itemId: item.id,
-        ),
-      ),
+    pushScreen<void>(
+      context,
+      EmbyItemDetailScreen(instance: instance, itemId: item.id),
     );
   }
 }
@@ -496,21 +493,19 @@ class _HorizontalSection extends ConsumerWidget {
                           ? null
                           : () {
                               if (embyContainerTypes.contains(item.type)) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => EmbyFolderScreen(
-                                      instance: instance,
-                                      item: item,
-                                    ),
+                                pushScreen<void>(
+                                  context,
+                                  EmbyFolderScreen(
+                                    instance: instance,
+                                    item: item,
                                   ),
                                 );
                               } else {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => EmbyItemDetailScreen(
-                                      instance: instance,
-                                      itemId: item.id,
-                                    ),
+                                pushScreen<void>(
+                                  context,
+                                  EmbyItemDetailScreen(
+                                    instance: instance,
+                                    itemId: item.id,
                                   ),
                                 );
                               }
@@ -583,21 +578,19 @@ class _VerticalSection extends ConsumerWidget {
                       ? null
                       : () {
                           if (embyContainerTypes.contains(item.type)) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => EmbyFolderScreen(
-                                  instance: instance,
-                                  item: item,
-                                ),
+                            pushScreen<void>(
+                              context,
+                              EmbyFolderScreen(
+                                instance: instance,
+                                item: item,
                               ),
                             );
                           } else {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => EmbyItemDetailScreen(
-                                  instance: instance,
-                                  itemId: item.id,
-                                ),
+                            pushScreen<void>(
+                              context,
+                              EmbyItemDetailScreen(
+                                instance: instance,
+                                itemId: item.id,
                               ),
                             );
                           }

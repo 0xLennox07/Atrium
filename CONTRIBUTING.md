@@ -37,6 +37,29 @@ For each package, generated code (`*.g.dart`, `*.freezed.dart`) is produced by:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
+Generated files are gitignored, so run this **from inside the package
+directory** (not the repo root) after pulling any change that touches a
+`models/` file - the build is broken until you do.
+
+## Navigation rule (important)
+
+The app shell is a GoRouter `StatefulShellRoute`: every bottom-nav tab has
+its own branch navigator that GoRouter rebuilds declaratively. A page pushed
+imperatively onto a branch navigator is not in GoRouter's route table, so
+the next shell rebuild silently removes it - the screen opens, then
+vanishes. It will look fine in quick testing and break later.
+
+So: never call `Navigator.of(context).push(...)` directly. Use the shared
+helper from `core_ui`, which targets the root navigator:
+
+```dart
+pushScreen<void>(context, MyDetailScreen(...));
+```
+
+For dialogs, sheets, and search pages the same rule applies via flags:
+`showDialog` already defaults to the root navigator; pass
+`useRootNavigator: true` to `showModalBottomSheet` and `showSearch`.
+
 ## Adding a service
 
 1. Create a new package under `services/` matching the existing layout
@@ -61,7 +84,8 @@ feat(service_sonarr): add manual search screen
 fix(core_networking): retry on connection-reset
 ```
 
-Open PRs against `main`. Squash-merge is the default.
+Open PRs against `development` (the default branch). `main` only receives
+merges from `development` at stable milestones. Squash-merge is the default.
 
 ## License
 

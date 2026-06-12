@@ -108,22 +108,19 @@ class _SearchResults extends ConsumerWidget {
               item: item,
               imageUrl: client.imageUrl(item),
               onTap: () {
+                // pushScreen = root navigator; branch-navigator pushes get
+                // swept by GoRouter shell rebuilds.
                 if (jellyfinContainerTypes.contains(item.type)) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => JellyfinFolderScreen(
-                        instance: instance,
-                        item: item,
-                      ),
-                    ),
+                  pushScreen<void>(
+                    context,
+                    JellyfinFolderScreen(instance: instance, item: item),
                   );
                 } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => JellyfinItemDetailScreen(
-                        instance: instance,
-                        itemId: item.id,
-                      ),
+                  pushScreen<void>(
+                    context,
+                    JellyfinItemDetailScreen(
+                      instance: instance,
+                      itemId: item.id,
                     ),
                   );
                 }

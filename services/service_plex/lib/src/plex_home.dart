@@ -164,10 +164,11 @@ class _ItemsGrid extends ConsumerWidget {
     PlexMetadata item,
   ) {
     if (!_playableTypes.contains(item.type)) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => _FolderScreen(instance: instance, item: item),
-        ),
+      // pushScreen = root navigator; branch-navigator pushes get swept by
+      // GoRouter shell rebuilds.
+      pushScreen<void>(
+        context,
+        _FolderScreen(instance: instance, item: item),
       );
       return;
     }

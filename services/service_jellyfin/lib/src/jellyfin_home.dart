@@ -177,20 +177,17 @@ class JellyfinItemsGrid extends ConsumerWidget {
 
   void _openItem(BuildContext context, JellyfinClient client, JellyfinItem item) {
     if (jellyfinContainerTypes.contains(item.type)) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => JellyfinFolderScreen(instance: instance, item: item),
-        ),
+      // pushScreen = root navigator; branch-navigator pushes get swept by
+      // GoRouter shell rebuilds.
+      pushScreen<void>(
+        context,
+        JellyfinFolderScreen(instance: instance, item: item),
       );
       return;
     }
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => JellyfinItemDetailScreen(
-          instance: instance,
-          itemId: item.id,
-        ),
-      ),
+    pushScreen<void>(
+      context,
+      JellyfinItemDetailScreen(instance: instance, itemId: item.id),
     );
   }
 }
@@ -496,21 +493,19 @@ class _HorizontalSection extends ConsumerWidget {
                           ? null
                           : () {
                               if (jellyfinContainerTypes.contains(item.type)) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => JellyfinFolderScreen(
-                                      instance: instance,
-                                      item: item,
-                                    ),
+                                pushScreen<void>(
+                                  context,
+                                  JellyfinFolderScreen(
+                                    instance: instance,
+                                    item: item,
                                   ),
                                 );
                               } else {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => JellyfinItemDetailScreen(
-                                      instance: instance,
-                                      itemId: item.id,
-                                    ),
+                                pushScreen<void>(
+                                  context,
+                                  JellyfinItemDetailScreen(
+                                    instance: instance,
+                                    itemId: item.id,
                                   ),
                                 );
                               }
@@ -583,21 +578,19 @@ class _VerticalSection extends ConsumerWidget {
                       ? null
                       : () {
                           if (jellyfinContainerTypes.contains(item.type)) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => JellyfinFolderScreen(
-                                  instance: instance,
-                                  item: item,
-                                ),
+                            pushScreen<void>(
+                              context,
+                              JellyfinFolderScreen(
+                                instance: instance,
+                                item: item,
                               ),
                             );
                           } else {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => JellyfinItemDetailScreen(
-                                  instance: instance,
-                                  itemId: item.id,
-                                ),
+                            pushScreen<void>(
+                              context,
+                              JellyfinItemDetailScreen(
+                                instance: instance,
+                                itemId: item.id,
                               ),
                             );
                           }

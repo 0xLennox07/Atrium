@@ -108,23 +108,17 @@ class _SearchResults extends ConsumerWidget {
               item: item,
               imageUrl: client.imageUrl(item),
               onTap: () {
+                // pushScreen = root navigator; branch-navigator pushes get
+                // swept by GoRouter shell rebuilds.
                 if (embyContainerTypes.contains(item.type)) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => EmbyFolderScreen(
-                        instance: instance,
-                        item: item,
-                      ),
-                    ),
+                  pushScreen<void>(
+                    context,
+                    EmbyFolderScreen(instance: instance, item: item),
                   );
                 } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => EmbyItemDetailScreen(
-                        instance: instance,
-                        itemId: item.id,
-                      ),
-                    ),
+                  pushScreen<void>(
+                    context,
+                    EmbyItemDetailScreen(instance: instance, itemId: item.id),
                   );
                 }
               },

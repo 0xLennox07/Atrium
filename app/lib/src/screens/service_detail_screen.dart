@@ -45,7 +45,11 @@ class ServiceDetailScreen extends ConsumerWidget {
               onPressed: () {
                 showSearch<void>(
                   context: context,
-                  delegate: instance.kind == ServiceKind.emby 
+                  // Root navigator: the search page is pushed imperatively,
+                  // so it must not ride the branch navigator (GoRouter shell
+                  // rebuilds sweep it).
+                  useRootNavigator: true,
+                  delegate: instance.kind == ServiceKind.emby
                     ? EmbySearchDelegate(instance: instance)
                     : JellyfinSearchDelegate(instance: instance) as SearchDelegate<void>,
                 );
