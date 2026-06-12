@@ -72,6 +72,11 @@ sealed class NetworkException implements Exception {
       return clip(trimmed);
     }
     if (data is Map) {
+      // Tautulli nests its envelope: {"response": {"message": ...}}.
+      final Object? nested = data['response'];
+      if (nested is Map) {
+        return _bodyMessage(nested);
+      }
       for (final String key in <String>['message', 'error', 'errorMessage']) {
         final Object? m = data[key];
         if (m is String && m.isNotEmpty) {
