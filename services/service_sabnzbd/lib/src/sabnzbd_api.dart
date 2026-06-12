@@ -16,7 +16,7 @@ class SabnzbdApi {
   Future<SabQueue> getQueue() async {
     try {
       final Response<dynamic> resp = await _dio.get<dynamic>(
-        '/api',
+        'api',
         queryParameters: <String, dynamic>{'mode': 'queue'},
       );
       return SabQueueResponse.fromJson(resp.data as Map<String, dynamic>)
@@ -53,7 +53,7 @@ class SabnzbdApi {
 
   Future<void> _simple(Map<String, dynamic> params) async {
     try {
-      await _dio.get<dynamic>('/api', queryParameters: params);
+      await _dio.get<dynamic>('api', queryParameters: params);
     } on DioException catch (e) {
       throw NetworkException.fromDio(e);
     }

@@ -24,11 +24,13 @@ class DioFactory {
   final ConnectionResolver _resolver;
 
   Future<Dio> create(Instance instance) async {
-    final Uri baseUrl = await _resolver.resolve(instance);
+    final Uri resolvedUrl = await _resolver.resolve(instance);
+    final String baseUrlStr = resolvedUrl.toString();
+    final String baseUrl = baseUrlStr.endsWith('/') ? baseUrlStr : '$baseUrlStr/';
 
     final Dio dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl.toString(),
+        baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 10),
         sendTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),

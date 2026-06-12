@@ -14,7 +14,7 @@ class ProwlarrApi {
 
   final Dio _dio;
 
-  static const String _base = '/api/v1';
+  static const String _base = 'api/v1';
 
   Future<List<ProwlarrIndexer>> getIndexers() async {
     try {

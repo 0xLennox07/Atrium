@@ -12,7 +12,7 @@ class OverseerrApi {
 
   final Dio _dio;
 
-  static const String _base = '/api/v1';
+  static const String _base = 'api/v1';
 
   Future<List<OverseerrRequest>> getRequests({int take = 30}) async {
     try {

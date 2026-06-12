@@ -18,7 +18,7 @@ class PlexApi {
   Future<List<PlexLibrary>> getLibraries() async {
     try {
       final Response<dynamic> resp =
-          await _dio.get<dynamic>('/library/sections');
+          await _dio.get<dynamic>('library/sections');
       return PlexLibrariesResponse.fromJson(resp.data as Map<String, dynamic>)
               .mediaContainer
               ?.directory ??
@@ -31,7 +31,7 @@ class PlexApi {
   Future<List<PlexMetadata>> getItems(String sectionKey) async {
     try {
       final Response<dynamic> resp =
-          await _dio.get<dynamic>('/library/sections/$sectionKey/all');
+          await _dio.get<dynamic>('library/sections/$sectionKey/all');
       return PlexItemsResponse.fromJson(resp.data as Map<String, dynamic>)
               .mediaContainer
               ?.metadata ??
@@ -45,7 +45,7 @@ class PlexApi {
   Future<List<PlexMetadata>> getChildren(String ratingKey) async {
     try {
       final Response<dynamic> resp =
-          await _dio.get<dynamic>('/library/metadata/$ratingKey/children');
+          await _dio.get<dynamic>('library/metadata/$ratingKey/children');
       return PlexItemsResponse.fromJson(resp.data as Map<String, dynamic>)
               .mediaContainer
               ?.metadata ??

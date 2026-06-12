@@ -42,9 +42,11 @@ class EmbyClient {
     required String deviceId,
     required bool allowSelfSigned,
   }) {
+    final String baseUrlStr = baseUrl.toString();
+    final String normalizedBaseUrl = baseUrlStr.endsWith('/') ? baseUrlStr : '$baseUrlStr/';
     final Dio dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl.toString(),
+        baseUrl: normalizedBaseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 30),
       ),
@@ -76,7 +78,7 @@ class EmbyClient {
     try {
       _dio.options.headers['X-Emby-Authorization'] = _identityHeader();
       final Response<dynamic> resp = await _dio.post<dynamic>(
-        '/Users/AuthenticateByName',
+        'Users/AuthenticateByName',
         data: <String, dynamic>{'Username': username, 'Pw': password},
       );
       final EmbyAuthResult result =
@@ -92,7 +94,7 @@ class EmbyClient {
 
   Future<List<EmbyView>> getViews() => _guarded(() async {
         final Response<dynamic> resp =
-            await _dio.get<dynamic>('/Users/$_userId/Views');
+            await _dio.get<dynamic>('Users/$_userId/Views');
         final Map<String, dynamic> map = resp.data as Map<String, dynamic>;
         final List<dynamic> items =
             (map['Items'] as List<dynamic>?) ?? <dynamic>[];
@@ -103,7 +105,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> getItems(String parentId) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items',
+          'Users/$_userId/Items',
           queryParameters: <String, dynamic>{
             'ParentId': parentId,
             'SortBy': 'SortName',
@@ -119,7 +121,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> getResumeItems() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items/Resume',
+          'Users/$_userId/Items/Resume',
           queryParameters: <String, dynamic>{
             'Limit': 24,
             'MediaTypes': 'Video',
@@ -135,7 +137,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> getNextUp() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Shows/NextUp',
+          'Shows/NextUp',
           queryParameters: <String, dynamic>{
             'UserId': _userId,
             'Limit': 24,
@@ -151,7 +153,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> searchItems(String query) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items',
+          'Users/$_userId/Items',
           queryParameters: <String, dynamic>{
             'SearchTerm': query,
             'Limit': 50,
@@ -169,7 +171,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> getFavorites() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items',
+          'Users/$_userId/Items',
           queryParameters: <String, dynamic>{
             'Filters': 'IsFavorite',
             'Recursive': true,
@@ -186,8 +188,8 @@ class EmbyClient {
 
   Future<EmbyUserData> markFavorite(String itemId, bool isFavorite) => _guarded(() async {
         final Response<dynamic> resp = isFavorite 
-            ? await _dio.post<dynamic>('/Users/$_userId/FavoriteItems/$itemId')
-            : await _dio.delete<dynamic>('/Users/$_userId/FavoriteItems/$itemId');
+            ? await _dio.post<dynamic>('Users/$_userId/FavoriteItems/$itemId')
+            : await _dio.delete<dynamic>('Users/$_userId/FavoriteItems/$itemId');
             
         return EmbyUserData.fromJson(
           resp.data as Map<String, dynamic>,
@@ -196,7 +198,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> getLatestItems() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items/Latest',
+          'Users/$_userId/Items/Latest',
           queryParameters: <String, dynamic>{
             'Limit': 20,
             'Fields': 'PrimaryImageAspectRatio,Overview',
@@ -212,7 +214,7 @@ class EmbyClient {
 
   Future<EmbyItem> getItemDetails(String itemId) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items/$itemId',
+          'Users/$_userId/Items/$itemId',
           queryParameters: <String, dynamic>{
             'Fields': 'Overview,People,CommunityRating,OfficialRating,RunTimeTicks',
           },
@@ -222,7 +224,7 @@ class EmbyClient {
 
   Future<List<EmbyItem>> getSeasons(String seriesId) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Shows/$seriesId/Seasons',
+          'Shows/$seriesId/Seasons',
           queryParameters: <String, dynamic>{
             'UserId': _userId,
             'Fields': 'PrimaryImageAspectRatio,Overview',
@@ -238,7 +240,7 @@ class EmbyClient {
   Future<List<EmbyItem>> getEpisodes(String seriesId, String seasonId) =>
       _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Shows/$seriesId/Episodes',
+          'Shows/$seriesId/Episodes',
           queryParameters: <String, dynamic>{
             'SeasonId': seasonId,
             'UserId': _userId,

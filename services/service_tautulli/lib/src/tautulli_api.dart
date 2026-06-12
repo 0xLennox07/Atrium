@@ -23,7 +23,7 @@ class TautulliApi {
   Future<dynamic> _cmd(String cmd, [Map<String, dynamic>? params]) async {
     try {
       final Response<dynamic> resp = await _dio.get<dynamic>(
-        '/api/v2',
+        'api/v2',
         queryParameters: <String, dynamic>{'cmd': cmd, ...?params},
       );
       final Map<String, dynamic> envelope =

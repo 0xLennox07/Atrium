@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'sonarr_series.dart';
 
 part 'sonarr_calendar.freezed.dart';
 part 'sonarr_calendar.g.dart';
@@ -16,6 +17,7 @@ abstract class SonarrCalendarEntry with _$SonarrCalendarEntry {
     DateTime? airDateUtc,
     @Default(false) bool hasFile,
     @Default(false) bool monitored,
+    SonarrSeries? series,
   }) = _SonarrCalendarEntry;
 
   factory SonarrCalendarEntry.fromJson(Map<String, dynamic> json) =>

@@ -28,32 +28,32 @@ enum _HealthMode {
     // *arr family + Overseerr: authed REST status endpoints.
     case ServiceKind.sonarr:
     case ServiceKind.radarr:
-      return (path: '/api/v3/system/status', mode: _HealthMode.authed);
+      return (path: 'api/v3/system/status', mode: _HealthMode.authed);
     case ServiceKind.prowlarr:
-      return (path: '/api/v1/system/status', mode: _HealthMode.authed);
+      return (path: 'api/v1/system/status', mode: _HealthMode.authed);
     case ServiceKind.bazarr:
-      return (path: '/api/system/status', mode: _HealthMode.authed);
+      return (path: 'api/system/status', mode: _HealthMode.authed);
     case ServiceKind.overseerr:
-      return (path: '/api/v1/status', mode: _HealthMode.authed);
+      return (path: 'api/v1/status', mode: _HealthMode.authed);
     // Query-key services - AuthInterceptor appends the key as a query param.
     case ServiceKind.tautulli:
       return (
-        path: '/api/v2?cmd=get_server_friendly_name',
+        path: 'api/v2?cmd=get_server_friendly_name',
         mode: _HealthMode.authed,
       );
     case ServiceKind.sabnzbd:
-      return (path: '/api?mode=version', mode: _HealthMode.authed);
+      return (path: 'api?mode=version', mode: _HealthMode.authed);
     // Plex: X-Plex-Token is attached; /identity returns server identity.
     case ServiceKind.plex:
-      return (path: '/identity', mode: _HealthMode.authed);
+      return (path: 'identity', mode: _HealthMode.authed);
     // Media servers expose an unauthenticated public-info endpoint.
     case ServiceKind.jellyfin:
     case ServiceKind.emby:
-      return (path: '/System/Info/Public', mode: _HealthMode.publicEndpoint);
+      return (path: 'System/Info/Public', mode: _HealthMode.publicEndpoint);
     // qBittorrent needs a session cookie we don't mint in a probe; any
     // response means the WebUI is up.
     case ServiceKind.qbittorrent:
-      return (path: '/api/v2/app/version', mode: _HealthMode.reachable);
+      return (path: 'api/v2/app/version', mode: _HealthMode.reachable);
   }
 }
 

@@ -14,7 +14,7 @@ class BazarrApi {
 
   Future<BazarrBadges> getBadges() async {
     try {
-      final Response<dynamic> resp = await _dio.get<dynamic>('/api/badges');
+      final Response<dynamic> resp = await _dio.get<dynamic>('api/badges');
       return BazarrBadges.fromJson(resp.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw NetworkException.fromDio(e);
@@ -24,7 +24,7 @@ class BazarrApi {
   Future<List<BazarrWantedEpisode>> getWantedEpisodes() async {
     try {
       final Response<dynamic> resp = await _dio.get<dynamic>(
-        '/api/episodes/wanted',
+        'api/episodes/wanted',
         queryParameters: <String, dynamic>{'start': 0, 'length': -1},
       );
       return BazarrWantedEpisodes.fromJson(resp.data as Map<String, dynamic>)
@@ -37,7 +37,7 @@ class BazarrApi {
   Future<List<BazarrWantedMovie>> getWantedMovies() async {
     try {
       final Response<dynamic> resp = await _dio.get<dynamic>(
-        '/api/movies/wanted',
+        'api/movies/wanted',
         queryParameters: <String, dynamic>{'start': 0, 'length': -1},
       );
       return BazarrWantedMovies.fromJson(resp.data as Map<String, dynamic>).data;

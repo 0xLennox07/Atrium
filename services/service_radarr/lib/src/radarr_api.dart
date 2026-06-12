@@ -21,7 +21,7 @@ class RadarrApi {
   final Dio _dio;
   final String? apiKey;
 
-  static const String _base = '/api/v3';
+  static const String _base = 'api/v3';
 
   Future<List<RadarrMovie>> getMovies() async {
     try {
@@ -222,14 +222,18 @@ class RadarrApi {
     final String? upstream = image.remoteUrl;
     if (remote != null && remote.isNotEmpty) {
       final Uri base = Uri.parse(_dio.options.baseUrl);
-      Uri abs =
-          remote.startsWith('http') ? Uri.parse(remote) : base.resolve(remote);
-      // Rewrite the session-authed UI route onto the apikey-authed API route.
-      if (abs.path.startsWith('/MediaCover/')) {
-        abs = abs.replace(
-          path: '$_base/mediacover${abs.path.substring('/MediaCover'.length)}',
-        );
+      
+      String pathOrUrl = remote;
+      if (pathOrUrl.startsWith('/MediaCover/')) {
+        pathOrUrl = '$_base/mediacover${pathOrUrl.substring('/MediaCover'.length)}';
+      } else if (pathOrUrl.startsWith('MediaCover/')) {
+        pathOrUrl = '$_base/mediacover${pathOrUrl.substring('MediaCover'.length)}';
       }
+
+      final Uri abs = pathOrUrl.startsWith('http')
+          ? Uri.parse(pathOrUrl)
+          : base.resolve(pathOrUrl.startsWith('/') ? pathOrUrl.substring(1) : pathOrUrl);
+
       if (apiKey == null || apiKey!.isEmpty) {
         return abs.toString();
       }

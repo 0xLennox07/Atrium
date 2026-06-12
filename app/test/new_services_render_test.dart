@@ -8,6 +8,7 @@ import 'package:service_bazarr/service_bazarr.dart';
 import 'package:service_overseerr/service_overseerr.dart';
 import 'package:service_plex/service_plex.dart';
 import 'package:service_sabnzbd/service_sabnzbd.dart';
+import 'package:service_sonarr/service_sonarr.dart';
 import 'package:service_tautulli/service_tautulli.dart';
 
 /// Deterministic render tests for the service modules added in the final pass.
@@ -185,5 +186,64 @@ void main() {
     );
     expect(find.text('Blade Runner'), findsOneWidget);
     expect(find.text('Movies'), findsOneWidget);
+  });
+
+  testWidgets('SonarrHome renders calendar entries', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final Instance instance = _instance(ServiceKind.sonarr);
+    // Use an airDate slightly in the future so it resolves as "Upcoming"
+    final DateTime airDate = DateTime.now().add(const Duration(hours: 2));
+    await _pump(
+      tester,
+      <Override>[
+        sonarrApiProvider(instance).overrideWith(
+          (Ref ref) async => SonarrApi(Dio(), apiKey: 'k'),
+        ),
+        sonarrSeriesProvider(instance).overrideWith(
+          (Ref ref) async => const <SonarrSeries>[],
+        ),
+        sonarrQueueProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrQueuePage(records: <SonarrQueueRecord>[]),
+        ),
+        sonarrCalendarProvider.overrideWith(
+          (Ref ref, (Instance, DateTime) key) async => <SonarrCalendarEntry>[
+            SonarrCalendarEntry(
+              id: 1,
+              seriesId: 10,
+              title: 'The Rains of Castamere',
+              seasonNumber: 3,
+              episodeNumber: 9,
+              airDateUtc: airDate,
+              hasFile: false,
+              monitored: true,
+              series: const SonarrSeries(
+                id: 10,
+                title: 'Game of Thrones',
+                images: <SonarrImage>[
+                  SonarrImage(coverType: 'poster', url: '/cover.jpg'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+      SonarrHome(instance: instance),
+      pumps: 2,
+    );
+
+    // Tap on Calendar tab
+    await tester.tap(find.text('Calendar'));
+    await tester.pumpAndSettle();
+    for (int i = 0; i < 3; i++) {
+      await tester.pump();
+    }
+
+    expect(find.text('Game of Thrones'), findsOneWidget);
+    expect(find.text('S03E09 • The Rains of Castamere'), findsOneWidget);
+    expect(find.text('Upcoming'), findsOneWidget);
   });
 }

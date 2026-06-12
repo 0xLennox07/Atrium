@@ -2,6 +2,7 @@ import 'package:core_models/core_models.dart';
 import 'package:core_networking/core_networking.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'models/sonarr_calendar.dart';
 import 'models/sonarr_queue.dart';
 import 'models/sonarr_series.dart';
 import 'sonarr_api.dart';
@@ -70,4 +71,33 @@ final sonarrQueueProvider =
   ref.pollEvery(sonarrQueuePollInterval);
   final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
   return api.getQueue();
+});
+
+/// The calendar entries for an instance for a given month.
+final sonarrCalendarProvider =
+    FutureProvider.autoDispose.family<List<SonarrCalendarEntry>, (Instance, DateTime)>((
+  Ref ref,
+  (Instance, DateTime) key,
+) async {
+  final (Instance instance, DateTime month) = key;
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  
+  // Calculate local month boundaries
+  final DateTime start = DateTime(month.year, month.month);
+  final DateTime end = DateTime(month.year, month.month + 1).subtract(const Duration(seconds: 1));
+
+  final List<SonarrCalendarEntry> entries = await api.getCalendar(
+    start: start,
+    end: end,
+  );
+
+  // Sort entries by UTC air date ascending
+  entries.sort((a, b) {
+    if (a.airDateUtc == null && b.airDateUtc == null) return 0;
+    if (a.airDateUtc == null) return 1;
+    if (b.airDateUtc == null) return -1;
+    return a.airDateUtc!.compareTo(b.airDateUtc!);
+  });
+
+  return entries;
 });

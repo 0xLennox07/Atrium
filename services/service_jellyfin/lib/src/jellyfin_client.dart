@@ -47,9 +47,11 @@ class JellyfinClient {
     required String deviceId,
     required bool allowSelfSigned,
   }) {
+    final String baseUrlStr = baseUrl.toString();
+    final String normalizedBaseUrl = baseUrlStr.endsWith('/') ? baseUrlStr : '$baseUrlStr/';
     final Dio dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl.toString(),
+        baseUrl: normalizedBaseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 30),
       ),
@@ -82,7 +84,7 @@ class JellyfinClient {
     try {
       _dio.options.headers['Authorization'] = _authHeader();
       final Response<dynamic> resp = await _dio.post<dynamic>(
-        '/Users/AuthenticateByName',
+        'Users/AuthenticateByName',
         data: <String, dynamic>{'Username': username, 'Pw': password},
       );
       final JellyfinAuthResult result =
@@ -98,7 +100,7 @@ class JellyfinClient {
 
   Future<List<JellyfinView>> getViews() => _guarded(() async {
         final Response<dynamic> resp =
-            await _dio.get<dynamic>('/Users/$_userId/Views');
+            await _dio.get<dynamic>('Users/$_userId/Views');
         final Map<String, dynamic> map = resp.data as Map<String, dynamic>;
         final List<dynamic> items =
             (map['Items'] as List<dynamic>?) ?? <dynamic>[];
@@ -110,7 +112,7 @@ class JellyfinClient {
 
   Future<List<JellyfinItem>> getItems(String parentId) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items',
+          'Users/$_userId/Items',
           queryParameters: <String, dynamic>{
             'ParentId': parentId,
             'SortBy': 'SortName',
@@ -131,7 +133,7 @@ class JellyfinClient {
         // which mixes in-progress and NextUp episodes. To match Emby's behavior,
         // we fetch both and merge them.
         final Future<Response<dynamic>> resumeFuture = _dio.get<dynamic>(
-          '/UserItems/Resume',
+          'UserItems/Resume',
           queryParameters: <String, dynamic>{
             'userId': _userId,
             'Limit': 24,
@@ -142,7 +144,7 @@ class JellyfinClient {
         );
 
         final Future<Response<dynamic>> nextUpFuture = _dio.get<dynamic>(
-          '/Shows/NextUp',
+          'Shows/NextUp',
           queryParameters: <String, dynamic>{
             'UserId': _userId,
             'Limit': 24,
@@ -173,7 +175,7 @@ class JellyfinClient {
 
   Future<List<JellyfinItem>> getNextUp() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Shows/NextUp',
+          'Shows/NextUp',
           queryParameters: <String, dynamic>{
             'UserId': _userId,
             'Limit': 24,
@@ -189,7 +191,7 @@ class JellyfinClient {
 
   Future<List<JellyfinItem>> searchItems(String query) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items',
+          'Users/$_userId/Items',
           queryParameters: <String, dynamic>{
             'SearchTerm': query,
             'Limit': 50,
@@ -207,7 +209,7 @@ class JellyfinClient {
 
   Future<List<JellyfinItem>> getFavorites() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items',
+          'Users/$_userId/Items',
           queryParameters: <String, dynamic>{
             'Filters': 'IsFavorite',
             'Recursive': true,
@@ -224,8 +226,8 @@ class JellyfinClient {
 
   Future<JellyfinUserData> markFavorite(String itemId, bool isFavorite) => _guarded(() async {
         final Response<dynamic> resp = isFavorite 
-            ? await _dio.post<dynamic>('/Users/$_userId/FavoriteItems/$itemId')
-            : await _dio.delete<dynamic>('/Users/$_userId/FavoriteItems/$itemId');
+            ? await _dio.post<dynamic>('Users/$_userId/FavoriteItems/$itemId')
+            : await _dio.delete<dynamic>('Users/$_userId/FavoriteItems/$itemId');
             
         return JellyfinUserData.fromJson(
           resp.data as Map<String, dynamic>,
@@ -234,7 +236,7 @@ class JellyfinClient {
 
   Future<List<JellyfinItem>> getLatestItems() => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items/Latest',
+          'Users/$_userId/Items/Latest',
           queryParameters: <String, dynamic>{
             'Limit': 20,
             'Fields': 'PrimaryImageAspectRatio,Overview',
@@ -250,7 +252,7 @@ class JellyfinClient {
 
   Future<JellyfinItem> getItemDetails(String itemId) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Users/$_userId/Items/$itemId',
+          'Users/$_userId/Items/$itemId',
           queryParameters: <String, dynamic>{
             'Fields': 'Overview,People,CommunityRating,OfficialRating,RunTimeTicks',
           },
@@ -260,7 +262,7 @@ class JellyfinClient {
 
   Future<List<JellyfinItem>> getSeasons(String seriesId) => _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Shows/$seriesId/Seasons',
+          'Shows/$seriesId/Seasons',
           queryParameters: <String, dynamic>{
             'UserId': _userId,
             'Fields': 'PrimaryImageAspectRatio,Overview',
@@ -276,7 +278,7 @@ class JellyfinClient {
   Future<List<JellyfinItem>> getEpisodes(String seriesId, String seasonId) =>
       _guarded(() async {
         final Response<dynamic> resp = await _dio.get<dynamic>(
-          '/Shows/$seriesId/Episodes',
+          'Shows/$seriesId/Episodes',
           queryParameters: <String, dynamic>{
             'SeasonId': seasonId,
             'UserId': _userId,
