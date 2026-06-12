@@ -6,7 +6,7 @@ import 'models/plex_models.dart';
 import 'plex_api.dart';
 
 /// A [PlexApi] for an instance, over the shared `instanceDioProvider`.
-final FutureProviderFamily<PlexApi, Instance> plexApiProvider =
+final plexApiProvider =
     FutureProvider.family<PlexApi, Instance>((Ref ref, Instance instance) async {
       final dio = await ref.watch(instanceDioProvider(instance).future);
       final String token = switch (instance.auth) {
@@ -17,7 +17,7 @@ final FutureProviderFamily<PlexApi, Instance> plexApiProvider =
     });
 
 /// Libraries for an instance.
-final FutureProviderFamily<List<PlexLibrary>, Instance> plexLibrariesProvider =
+final plexLibrariesProvider =
     FutureProvider.family<List<PlexLibrary>, Instance>((
       Ref ref,
       Instance instance,
@@ -27,8 +27,7 @@ final FutureProviderFamily<List<PlexLibrary>, Instance> plexLibrariesProvider =
     });
 
 /// Items within a library, keyed by (instance, sectionKey).
-final FutureProviderFamily<List<PlexMetadata>, (Instance, String)>
-    plexItemsProvider =
+final plexItemsProvider =
     FutureProvider.family<List<PlexMetadata>, (Instance, String)>((
       Ref ref,
       (Instance, String) key,
@@ -40,8 +39,7 @@ final FutureProviderFamily<List<PlexMetadata>, (Instance, String)>
 
 /// Children of a show (seasons) or season (episodes), keyed by
 /// (instance, ratingKey).
-final FutureProviderFamily<List<PlexMetadata>, (Instance, String)>
-    plexChildrenProvider =
+final plexChildrenProvider =
     FutureProvider.family<List<PlexMetadata>, (Instance, String)>((
       Ref ref,
       (Instance, String) key,

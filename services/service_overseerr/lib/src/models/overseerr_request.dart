@@ -5,7 +5,7 @@ part 'overseerr_request.g.dart';
 
 /// `GET /api/v1/request` → `{ "pageInfo": {…}, "results": [ … ] }`.
 @freezed
-class OverseerrRequestPage with _$OverseerrRequestPage {
+abstract class OverseerrRequestPage with _$OverseerrRequestPage {
   const factory OverseerrRequestPage({
     @Default(<OverseerrRequest>[]) List<OverseerrRequest> results,
   }) = _OverseerrRequestPage;
@@ -18,7 +18,7 @@ class OverseerrRequestPage with _$OverseerrRequestPage {
 ///
 /// `status`: 1 = pending approval, 2 = approved, 3 = declined.
 @freezed
-class OverseerrRequest with _$OverseerrRequest {
+abstract class OverseerrRequest with _$OverseerrRequest {
   const factory OverseerrRequest({
     required int id,
     @Default(1) int status,
@@ -38,7 +38,7 @@ class OverseerrRequest with _$OverseerrRequest {
 /// `status`: 1 unknown, 2 pending, 3 processing, 4 partially available,
 /// 5 available.
 @freezed
-class OverseerrMedia with _$OverseerrMedia {
+abstract class OverseerrMedia with _$OverseerrMedia {
   const factory OverseerrMedia({
     @Default('') String mediaType,
     int? tmdbId,
@@ -50,7 +50,7 @@ class OverseerrMedia with _$OverseerrMedia {
 }
 
 @freezed
-class OverseerrUser with _$OverseerrUser {
+abstract class OverseerrUser with _$OverseerrUser {
   const factory OverseerrUser({
     @Default('') String displayName,
     @Default('') String username,

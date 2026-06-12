@@ -5,7 +5,7 @@ part 'radarr_queue.g.dart';
 
 /// A page of queue records from `GET /api/v3/queue`.
 @freezed
-class RadarrQueuePage with _$RadarrQueuePage {
+abstract class RadarrQueuePage with _$RadarrQueuePage {
   const factory RadarrQueuePage({
     @Default(0) int page,
     @Default(0) int pageSize,
@@ -19,7 +19,7 @@ class RadarrQueuePage with _$RadarrQueuePage {
 
 /// One movie being downloaded / imported.
 @freezed
-class RadarrQueueRecord with _$RadarrQueueRecord {
+abstract class RadarrQueueRecord with _$RadarrQueueRecord {
   const factory RadarrQueueRecord({
     required int id,
     int? movieId,

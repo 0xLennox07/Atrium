@@ -6,7 +6,7 @@ part 'emby_auth.g.dart';
 /// Result of Emby's `POST /Users/AuthenticateByName`. PascalCase keys mapped
 /// via [JsonKey]. (Emby's auth shape matches Jellyfin's.)
 @freezed
-class EmbyAuthResult with _$EmbyAuthResult {
+abstract class EmbyAuthResult with _$EmbyAuthResult {
   const factory EmbyAuthResult({
     @JsonKey(name: 'AccessToken') required String accessToken,
     @JsonKey(name: 'ServerId') String? serverId,
@@ -18,7 +18,7 @@ class EmbyAuthResult with _$EmbyAuthResult {
 }
 
 @freezed
-class EmbyUser with _$EmbyUser {
+abstract class EmbyUser with _$EmbyUser {
   const factory EmbyUser({
     @JsonKey(name: 'Id') required String id,
     @JsonKey(name: 'Name') @Default('') String name,

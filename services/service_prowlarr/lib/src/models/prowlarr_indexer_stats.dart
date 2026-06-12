@@ -5,7 +5,7 @@ part 'prowlarr_indexer_stats.g.dart';
 
 /// Aggregate indexer statistics from `GET /api/v1/indexerstats`.
 @freezed
-class ProwlarrIndexerStats with _$ProwlarrIndexerStats {
+abstract class ProwlarrIndexerStats with _$ProwlarrIndexerStats {
   const factory ProwlarrIndexerStats({
     @Default(<ProwlarrIndexerStat>[]) List<ProwlarrIndexerStat> indexers,
   }) = _ProwlarrIndexerStats;
@@ -16,7 +16,7 @@ class ProwlarrIndexerStats with _$ProwlarrIndexerStats {
 
 /// Per-indexer counters within [ProwlarrIndexerStats].
 @freezed
-class ProwlarrIndexerStat with _$ProwlarrIndexerStat {
+abstract class ProwlarrIndexerStat with _$ProwlarrIndexerStat {
   const factory ProwlarrIndexerStat({
     required int indexerId,
     String? indexerName,

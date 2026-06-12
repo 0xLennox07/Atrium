@@ -5,7 +5,7 @@ part 'jellyfin_item.g.dart';
 
 /// A page of items from `GET /Users/{userId}/Items`.
 @freezed
-class JellyfinItemsResult with _$JellyfinItemsResult {
+abstract class JellyfinItemsResult with _$JellyfinItemsResult {
   const factory JellyfinItemsResult({
     @JsonKey(name: 'Items') @Default(<JellyfinItem>[]) List<JellyfinItem> items,
     @JsonKey(name: 'TotalRecordCount') @Default(0) int totalRecordCount,
@@ -17,7 +17,7 @@ class JellyfinItemsResult with _$JellyfinItemsResult {
 
 /// A library item (movie, series, episode, album, …).
 @freezed
-class JellyfinItem with _$JellyfinItem {
+abstract class JellyfinItem with _$JellyfinItem {
   const factory JellyfinItem({
     @JsonKey(name: 'Id') required String id,
     @JsonKey(name: 'Name') @Default('') String name,
@@ -49,7 +49,7 @@ class JellyfinItem with _$JellyfinItem {
 
 /// Per-user playback state for an item.
 @freezed
-class JellyfinUserData with _$JellyfinUserData {
+abstract class JellyfinUserData with _$JellyfinUserData {
   const factory JellyfinUserData({
     @JsonKey(name: 'PlayedPercentage') @Default(0.0) double playedPercentage,
     @JsonKey(name: 'Played') @Default(false) bool played,
@@ -64,7 +64,7 @@ class JellyfinUserData with _$JellyfinUserData {
 
 /// A cast or crew member attached to an item.
 @freezed
-class JellyfinPerson with _$JellyfinPerson {
+abstract class JellyfinPerson with _$JellyfinPerson {
   const factory JellyfinPerson({
     @JsonKey(name: 'Id') required String id,
     @JsonKey(name: 'Name') @Default('') String name,

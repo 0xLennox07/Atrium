@@ -87,7 +87,7 @@ class ActiveProfileIdController extends Notifier<String?> {
 /// stored active id is missing or stale.
 final Provider<Profile?> activeProfileProvider = Provider<Profile?>((Ref ref) {
   final List<Profile> profiles =
-      ref.watch(profileListProvider).valueOrNull ?? const <Profile>[];
+      ref.watch(profileListProvider).value ?? const <Profile>[];
   if (profiles.isEmpty) {
     return null;
   }

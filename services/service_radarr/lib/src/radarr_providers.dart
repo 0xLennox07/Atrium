@@ -21,7 +21,7 @@ const Duration radarrLibraryPollInterval = Duration(seconds: 60);
 ///
 /// Deliberately NOT autoDispose: the underlying Dio is shared and cheap to
 /// keep; disposing it per-screen would re-run the LAN/WAN probe needlessly.
-final FutureProviderFamily<RadarrApi, Instance> radarrApiProvider =
+final radarrApiProvider =
     FutureProvider.family<RadarrApi, Instance>((
       Ref ref,
       Instance instance,
@@ -35,8 +35,7 @@ final FutureProviderFamily<RadarrApi, Instance> radarrApiProvider =
     });
 
 /// All movies for an instance, sorted by title. Polls slowly while watched.
-final AutoDisposeFutureProviderFamily<List<RadarrMovie>, Instance>
-    radarrMoviesProvider =
+final radarrMoviesProvider =
     FutureProvider.autoDispose.family<List<RadarrMovie>, Instance>((
       Ref ref,
       Instance instance,
@@ -52,8 +51,7 @@ final AutoDisposeFutureProviderFamily<List<RadarrMovie>, Instance>
     });
 
 /// One movie by id. Used by the detail screen; refreshed on demand.
-final AutoDisposeFutureProviderFamily<RadarrMovie, (Instance, int)>
-    radarrMovieByIdProvider =
+final radarrMovieByIdProvider =
     FutureProvider.autoDispose.family<RadarrMovie, (Instance, int)>((
       Ref ref,
       (Instance, int) key,
@@ -64,8 +62,7 @@ final AutoDisposeFutureProviderFamily<RadarrMovie, (Instance, int)>
     });
 
 /// The download queue for an instance. Polls fast while watched.
-final AutoDisposeFutureProviderFamily<RadarrQueuePage, Instance>
-    radarrQueueProvider =
+final radarrQueueProvider =
     FutureProvider.autoDispose.family<RadarrQueuePage, Instance>((
       Ref ref,
       Instance instance,

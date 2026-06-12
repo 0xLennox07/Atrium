@@ -30,7 +30,7 @@ final Provider<DioFactory> dioFactoryProvider = Provider<DioFactory>((Ref ref) {
 /// A [Dio] bound to a specific [Instance], with the right base URL and auth
 /// wired in. Cached per instance value; closed automatically when no longer
 /// watched.
-final FutureProviderFamily<Dio, Instance> instanceDioProvider =
+final instanceDioProvider =
     FutureProvider.family<Dio, Instance>((Ref ref, Instance instance) async {
   final Dio dio = await ref.watch(dioFactoryProvider).create(instance);
   ref.onDispose(() => dio.close(force: true));

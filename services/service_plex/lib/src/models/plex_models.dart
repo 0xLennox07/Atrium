@@ -7,7 +7,7 @@ part 'plex_models.g.dart';
 /// `Accept: application/json` (set by the auth interceptor) it returns JSON
 /// rather than the default XML.
 @freezed
-class PlexLibrariesResponse with _$PlexLibrariesResponse {
+abstract class PlexLibrariesResponse with _$PlexLibrariesResponse {
   const factory PlexLibrariesResponse({
     @JsonKey(name: 'MediaContainer') PlexLibrariesContainer? mediaContainer,
   }) = _PlexLibrariesResponse;
@@ -17,7 +17,7 @@ class PlexLibrariesResponse with _$PlexLibrariesResponse {
 }
 
 @freezed
-class PlexLibrariesContainer with _$PlexLibrariesContainer {
+abstract class PlexLibrariesContainer with _$PlexLibrariesContainer {
   const factory PlexLibrariesContainer({
     @JsonKey(name: 'Directory')
     @Default(<PlexLibrary>[])
@@ -30,7 +30,7 @@ class PlexLibrariesContainer with _$PlexLibrariesContainer {
 
 /// A Plex library section.
 @freezed
-class PlexLibrary with _$PlexLibrary {
+abstract class PlexLibrary with _$PlexLibrary {
   const factory PlexLibrary({
     required String key,
     @Default('') String title,
@@ -43,7 +43,7 @@ class PlexLibrary with _$PlexLibrary {
 }
 
 @freezed
-class PlexItemsResponse with _$PlexItemsResponse {
+abstract class PlexItemsResponse with _$PlexItemsResponse {
   const factory PlexItemsResponse({
     @JsonKey(name: 'MediaContainer') PlexItemsContainer? mediaContainer,
   }) = _PlexItemsResponse;
@@ -53,7 +53,7 @@ class PlexItemsResponse with _$PlexItemsResponse {
 }
 
 @freezed
-class PlexItemsContainer with _$PlexItemsContainer {
+abstract class PlexItemsContainer with _$PlexItemsContainer {
   const factory PlexItemsContainer({
     @JsonKey(name: 'Metadata')
     @Default(<PlexMetadata>[])
@@ -67,7 +67,7 @@ class PlexItemsContainer with _$PlexItemsContainer {
 
 /// A Plex library item (movie, show, …).
 @freezed
-class PlexMetadata with _$PlexMetadata {
+abstract class PlexMetadata with _$PlexMetadata {
   const factory PlexMetadata({
     @JsonKey(name: 'ratingKey') @Default('') String ratingKey,
     @Default('') String title,
@@ -91,7 +91,7 @@ class PlexMetadata with _$PlexMetadata {
 
 /// One media version of an item (a quality/format). Holds the file parts.
 @freezed
-class PlexMedia with _$PlexMedia {
+abstract class PlexMedia with _$PlexMedia {
   const factory PlexMedia({
     @JsonKey(name: 'Part') @Default(<PlexPart>[]) List<PlexPart> parts,
   }) = _PlexMedia;
@@ -103,7 +103,7 @@ class PlexMedia with _$PlexMedia {
 /// One physical file backing a [PlexMedia]. [key] is the streamable path
 /// (e.g. `/library/parts/123/456/file.mkv`).
 @freezed
-class PlexPart with _$PlexPart {
+abstract class PlexPart with _$PlexPart {
   const factory PlexPart({
     @JsonKey(name: 'key') String? key,
     @JsonKey(name: 'duration') int? duration,

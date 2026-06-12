@@ -7,7 +7,7 @@ part 'tautulli_activity.g.dart';
 
 /// Tautulli wraps responses as `{ "response": { "result": …, "data": … } }`.
 @freezed
-class TautulliActivityEnvelope with _$TautulliActivityEnvelope {
+abstract class TautulliActivityEnvelope with _$TautulliActivityEnvelope {
   const factory TautulliActivityEnvelope({
     required TautulliActivityBody response,
   }) = _TautulliActivityEnvelope;
@@ -17,7 +17,7 @@ class TautulliActivityEnvelope with _$TautulliActivityEnvelope {
 }
 
 @freezed
-class TautulliActivityBody with _$TautulliActivityBody {
+abstract class TautulliActivityBody with _$TautulliActivityBody {
   const factory TautulliActivityBody({
     @JsonKey(fromJson: tString) @Default('') String result,
     TautulliActivity? data,
@@ -28,7 +28,7 @@ class TautulliActivityBody with _$TautulliActivityBody {
 }
 
 @freezed
-class TautulliActivity with _$TautulliActivity {
+abstract class TautulliActivity with _$TautulliActivity {
   const factory TautulliActivity({
     @JsonKey(name: 'stream_count', fromJson: tInt) @Default(0) int streamCount,
     @JsonKey(name: 'stream_count_direct_play', fromJson: tInt)
@@ -58,7 +58,7 @@ class TautulliActivity with _$TautulliActivity {
 /// Every field is converted tolerantly - Tautulli mixes strings and numbers
 /// freely across versions and players.
 @freezed
-class TautulliSession with _$TautulliSession {
+abstract class TautulliSession with _$TautulliSession {
   const factory TautulliSession({
     @JsonKey(name: 'session_key', fromJson: tString)
     @Default('')

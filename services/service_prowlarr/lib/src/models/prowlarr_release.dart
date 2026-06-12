@@ -10,7 +10,7 @@ part 'prowlarr_release.g.dart';
 /// cache - so a trimmed typed model is safe here (unlike *arr add/update,
 /// which need the complete raw object).
 @freezed
-class ProwlarrRelease with _$ProwlarrRelease {
+abstract class ProwlarrRelease with _$ProwlarrRelease {
   const ProwlarrRelease._();
 
   const factory ProwlarrRelease({
@@ -49,7 +49,7 @@ class ProwlarrRelease with _$ProwlarrRelease {
 
 /// Category tag on a release (`categories[].{id,name}`).
 @freezed
-class ProwlarrReleaseCategory with _$ProwlarrReleaseCategory {
+abstract class ProwlarrReleaseCategory with _$ProwlarrReleaseCategory {
   const factory ProwlarrReleaseCategory({
     @Default(0) int id,
     String? name,

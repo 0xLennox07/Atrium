@@ -6,7 +6,7 @@ import 'models/overseerr_request.dart';
 import 'overseerr_api.dart';
 
 /// An [OverseerrApi] for an instance, over the shared `instanceDioProvider`.
-final FutureProviderFamily<OverseerrApi, Instance> overseerrApiProvider =
+final overseerrApiProvider =
     FutureProvider.family<OverseerrApi, Instance>((
       Ref ref,
       Instance instance,
@@ -16,8 +16,7 @@ final FutureProviderFamily<OverseerrApi, Instance> overseerrApiProvider =
     });
 
 /// Recent media requests for an instance.
-final FutureProviderFamily<List<OverseerrRequest>, Instance>
-    overseerrRequestsProvider =
+final overseerrRequestsProvider =
     FutureProvider.family<List<OverseerrRequest>, Instance>((
       Ref ref,
       Instance instance,

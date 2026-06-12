@@ -6,7 +6,7 @@ part 'jellyfin_auth.g.dart';
 /// Result of `POST /Users/AuthenticateByName`. Jellyfin returns PascalCase
 /// keys, mapped explicitly with [JsonKey].
 @freezed
-class JellyfinAuthResult with _$JellyfinAuthResult {
+abstract class JellyfinAuthResult with _$JellyfinAuthResult {
   const factory JellyfinAuthResult({
     @JsonKey(name: 'AccessToken') required String accessToken,
     @JsonKey(name: 'ServerId') String? serverId,
@@ -18,7 +18,7 @@ class JellyfinAuthResult with _$JellyfinAuthResult {
 }
 
 @freezed
-class JellyfinUser with _$JellyfinUser {
+abstract class JellyfinUser with _$JellyfinUser {
   const factory JellyfinUser({
     @JsonKey(name: 'Id') required String id,
     @JsonKey(name: 'Name') @Default('') String name,

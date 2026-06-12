@@ -16,7 +16,7 @@ part 'instance.g.dart';
 /// Users may have multiple instances of the same [kind] (e.g., two Sonarrs:
 /// "Home" and "Seedbox"); each is a separate [Instance] with its own [id].
 @freezed
-class Instance with _$Instance {
+abstract class Instance with _$Instance {
   const factory Instance({
     /// Stable identifier, generated once at create time. Used as the key for
     /// secret storage and Riverpod scoping. Never reuse.

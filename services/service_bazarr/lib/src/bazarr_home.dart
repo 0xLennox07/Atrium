@@ -60,7 +60,7 @@ class _BadgesHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final BazarrBadges? b = ref.watch(bazarrBadgesProvider(instance)).valueOrNull;
+    final BazarrBadges? b = ref.watch(bazarrBadgesProvider(instance)).value;
     if (b == null) {
       return const SizedBox(height: Insets.sm);
     }

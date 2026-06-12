@@ -8,7 +8,7 @@ part 'sonarr_series.g.dart';
 /// Only the fields Atrium currently renders are modeled; Sonarr returns many
 /// more. Unmodeled fields are simply ignored by json_serializable.
 @freezed
-class SonarrSeries with _$SonarrSeries {
+abstract class SonarrSeries with _$SonarrSeries {
   const factory SonarrSeries({
     required int id,
     required String title,
@@ -28,7 +28,7 @@ class SonarrSeries with _$SonarrSeries {
 }
 
 @freezed
-class SonarrSeasonStats with _$SonarrSeasonStats {
+abstract class SonarrSeasonStats with _$SonarrSeasonStats {
   const factory SonarrSeasonStats({
     required int seasonNumber,
     @Default(false) bool monitored,
@@ -41,7 +41,7 @@ class SonarrSeasonStats with _$SonarrSeasonStats {
 
 /// Per-season statistics nested under `seasons[].statistics`.
 @freezed
-class SonarrSeasonStatistics with _$SonarrSeasonStatistics {
+abstract class SonarrSeasonStatistics with _$SonarrSeasonStatistics {
   const factory SonarrSeasonStatistics({
     @Default(0) int episodeCount,
     @Default(0) int episodeFileCount,
@@ -54,7 +54,7 @@ class SonarrSeasonStatistics with _$SonarrSeasonStatistics {
 }
 
 @freezed
-class SonarrSeriesStatistics with _$SonarrSeriesStatistics {
+abstract class SonarrSeriesStatistics with _$SonarrSeriesStatistics {
   const factory SonarrSeriesStatistics({
     @Default(0) int episodeCount,
     @Default(0) int episodeFileCount,
@@ -68,7 +68,7 @@ class SonarrSeriesStatistics with _$SonarrSeriesStatistics {
 }
 
 @freezed
-class SonarrImage with _$SonarrImage {
+abstract class SonarrImage with _$SonarrImage {
   const factory SonarrImage({
     required String coverType,
     String? remoteUrl,

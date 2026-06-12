@@ -14,7 +14,7 @@ const Duration tautulliActivityPollInterval = Duration(seconds: 10);
 ///
 /// Deliberately NOT autoDispose: the underlying Dio is shared and cheap to
 /// keep; disposing it per-screen would re-run the LAN/WAN probe needlessly.
-final FutureProviderFamily<TautulliApi, Instance> tautulliApiProvider =
+final tautulliApiProvider =
     FutureProvider.family<TautulliApi, Instance>((
       Ref ref,
       Instance instance,
@@ -24,8 +24,7 @@ final FutureProviderFamily<TautulliApi, Instance> tautulliApiProvider =
     });
 
 /// Current activity (active streams). Polls while watched.
-final AutoDisposeFutureProviderFamily<TautulliActivity, Instance>
-    tautulliActivityProvider =
+final tautulliActivityProvider =
     FutureProvider.autoDispose.family<TautulliActivity, Instance>((
       Ref ref,
       Instance instance,
@@ -37,8 +36,7 @@ final AutoDisposeFutureProviderFamily<TautulliActivity, Instance>
     });
 
 /// Watch history, newest first. Refreshed on demand (pull-to-refresh).
-final AutoDisposeFutureProviderFamily<TautulliHistoryPage, Instance>
-    tautulliHistoryProvider =
+final tautulliHistoryProvider =
     FutureProvider.autoDispose.family<TautulliHistoryPage, Instance>((
       Ref ref,
       Instance instance,
@@ -49,8 +47,7 @@ final AutoDisposeFutureProviderFamily<TautulliHistoryPage, Instance>
     });
 
 /// Home statistics for the last 30 days. Refreshed on demand.
-final AutoDisposeFutureProviderFamily<List<TautulliHomeStat>, Instance>
-    tautulliHomeStatsProvider =
+final tautulliHomeStatsProvider =
     FutureProvider.autoDispose.family<List<TautulliHomeStat>, Instance>((
       Ref ref,
       Instance instance,
@@ -61,8 +58,7 @@ final AutoDisposeFutureProviderFamily<List<TautulliHomeStat>, Instance>
     });
 
 /// Users with play counts, most plays first. Refreshed on demand.
-final AutoDisposeFutureProviderFamily<List<TautulliUser>, Instance>
-    tautulliUsersProvider =
+final tautulliUsersProvider =
     FutureProvider.autoDispose.family<List<TautulliUser>, Instance>((
       Ref ref,
       Instance instance,

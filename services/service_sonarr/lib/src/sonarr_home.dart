@@ -73,7 +73,7 @@ class _SeriesTab extends ConsumerWidget {
     final AsyncValue<List<SonarrSeries>> series =
         ref.watch(sonarrSeriesProvider(instance));
     final SonarrApi? api =
-        ref.watch(sonarrApiProvider(instance)).valueOrNull;
+        ref.watch(sonarrApiProvider(instance)).value;
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(sonarrSeriesProvider(instance)),
       child: AsyncValueView<List<SonarrSeries>>(

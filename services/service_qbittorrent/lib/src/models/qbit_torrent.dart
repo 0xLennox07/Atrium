@@ -8,7 +8,7 @@ part 'qbit_torrent.g.dart';
 /// Only the fields Atrium renders are modeled. qBittorrent returns snake_case
 /// keys; the snake_case ones are mapped with [JsonKey].
 @freezed
-class QbitTorrent with _$QbitTorrent {
+abstract class QbitTorrent with _$QbitTorrent {
   const factory QbitTorrent({
     required String hash,
     required String name,

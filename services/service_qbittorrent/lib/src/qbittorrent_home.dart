@@ -86,7 +86,7 @@ class _TransferHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final QbitTransferInfo? info =
-        ref.watch(qbitTransferProvider(instance)).valueOrNull;
+        ref.watch(qbitTransferProvider(instance)).value;
     final ThemeData theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(

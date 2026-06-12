@@ -8,7 +8,7 @@ import 'models/emby_view.dart';
 
 /// A logged-in [EmbyClient] for an instance. Resolves the base URL via the
 /// shared [ConnectionResolver] then builds its own token-aware Dio.
-final FutureProviderFamily<EmbyClient, Instance> embyClientProvider =
+final embyClientProvider =
     FutureProvider.family<EmbyClient, Instance>((
       Ref ref,
       Instance instance,
@@ -33,7 +33,7 @@ final FutureProviderFamily<EmbyClient, Instance> embyClientProvider =
     });
 
 /// Libraries for an instance.
-final FutureProviderFamily<List<EmbyView>, Instance> embyViewsProvider =
+final embyViewsProvider =
     FutureProvider.family<List<EmbyView>, Instance>((
       Ref ref,
       Instance instance,
@@ -44,8 +44,7 @@ final FutureProviderFamily<List<EmbyView>, Instance> embyViewsProvider =
     });
 
 /// Items within a library, keyed by (instance, libraryId).
-final FutureProviderFamily<List<EmbyItem>, (Instance, String)>
-    embyItemsProvider =
+final embyItemsProvider =
     FutureProvider.family<List<EmbyItem>, (Instance, String)>((
       Ref ref,
       (Instance, String) key,
@@ -56,8 +55,7 @@ final FutureProviderFamily<List<EmbyItem>, (Instance, String)>
       return client.getItems(libraryId);
     });
 
-final FutureProviderFamily<List<EmbyItem>, Instance>
-    embyResumeItemsProvider =
+final embyResumeItemsProvider =
     FutureProvider.family<List<EmbyItem>, Instance>((
       Ref ref,
       Instance instance,
@@ -67,8 +65,7 @@ final FutureProviderFamily<List<EmbyItem>, Instance>
       return client.getResumeItems();
     });
 
-final FutureProviderFamily<List<EmbyItem>, Instance>
-    embyNextUpProvider =
+final embyNextUpProvider =
     FutureProvider.family<List<EmbyItem>, Instance>((
       Ref ref,
       Instance instance,
@@ -78,8 +75,7 @@ final FutureProviderFamily<List<EmbyItem>, Instance>
       return client.getNextUp();
     });
 
-final FutureProviderFamily<List<EmbyItem>, Instance>
-    embyLatestItemsProvider =
+final embyLatestItemsProvider =
     FutureProvider.family<List<EmbyItem>, Instance>((
       Ref ref,
       Instance instance,
@@ -89,8 +85,7 @@ final FutureProviderFamily<List<EmbyItem>, Instance>
       return client.getLatestItems();
     });
 
-final FutureProviderFamily<List<EmbyItem>, Instance>
-    embyFavoritesProvider =
+final embyFavoritesProvider =
     FutureProvider.family<List<EmbyItem>, Instance>((
       Ref ref,
       Instance instance,
@@ -100,8 +95,7 @@ final FutureProviderFamily<List<EmbyItem>, Instance>
       return client.getFavorites();
     });
 
-final FutureProviderFamily<EmbyItem, (Instance, String)>
-    embyItemDetailsProvider =
+final embyItemDetailsProvider =
     FutureProvider.family<EmbyItem, (Instance, String)>((
       Ref ref,
       (Instance, String) key,
@@ -112,8 +106,7 @@ final FutureProviderFamily<EmbyItem, (Instance, String)>
       return client.getItemDetails(itemId);
     });
 
-final FutureProviderFamily<List<EmbyItem>, (Instance, String)>
-    embySeasonsProvider =
+final embySeasonsProvider =
     FutureProvider.family<List<EmbyItem>, (Instance, String)>((
       Ref ref,
       (Instance, String) key,
@@ -124,8 +117,7 @@ final FutureProviderFamily<List<EmbyItem>, (Instance, String)>
       return client.getSeasons(seriesId);
     });
 
-final FutureProviderFamily<List<EmbyItem>, (Instance, String, String)>
-    embyEpisodesProvider =
+final embyEpisodesProvider =
     FutureProvider.family<List<EmbyItem>, (Instance, String, String)>((
       Ref ref,
       (Instance, String, String) key,

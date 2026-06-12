@@ -23,7 +23,7 @@ const Duration sonarrLibraryPollInterval = Duration(seconds: 60);
 ///
 /// Deliberately NOT autoDispose: the underlying Dio is shared and cheap to
 /// keep; disposing it per-screen would re-run the LAN/WAN probe needlessly.
-final FutureProviderFamily<SonarrApi, Instance> sonarrApiProvider =
+final sonarrApiProvider =
     FutureProvider.family<SonarrApi, Instance>(
         (Ref ref, Instance instance) async {
   final dio = await ref.watch(instanceDioProvider(instance).future);
@@ -35,8 +35,7 @@ final FutureProviderFamily<SonarrApi, Instance> sonarrApiProvider =
 });
 
 /// All series for an instance, sorted by title. Polls slowly while watched.
-final AutoDisposeFutureProviderFamily<List<SonarrSeries>, Instance>
-    sonarrSeriesProvider =
+final sonarrSeriesProvider =
     FutureProvider.autoDispose.family<List<SonarrSeries>, Instance>((
   Ref ref,
   Instance instance,
@@ -52,8 +51,7 @@ final AutoDisposeFutureProviderFamily<List<SonarrSeries>, Instance>
 });
 
 /// One series by id. Used by the detail screen; refreshed on demand.
-final AutoDisposeFutureProviderFamily<SonarrSeries, (Instance, int)>
-    sonarrSeriesByIdProvider =
+final sonarrSeriesByIdProvider =
     FutureProvider.autoDispose.family<SonarrSeries, (Instance, int)>((
   Ref ref,
   (Instance, int) key,
@@ -64,8 +62,7 @@ final AutoDisposeFutureProviderFamily<SonarrSeries, (Instance, int)>
 });
 
 /// The download queue for an instance. Polls fast while watched.
-final AutoDisposeFutureProviderFamily<SonarrQueuePage, Instance>
-    sonarrQueueProvider =
+final sonarrQueueProvider =
     FutureProvider.autoDispose.family<SonarrQueuePage, Instance>((
   Ref ref,
   Instance instance,

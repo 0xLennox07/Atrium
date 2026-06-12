@@ -15,7 +15,7 @@ const Duration prowlarrPollInterval = Duration(seconds: 60);
 ///
 /// Deliberately NOT autoDispose: the underlying Dio is shared and cheap to
 /// keep; disposing it per-screen would re-run the LAN/WAN probe needlessly.
-final FutureProviderFamily<ProwlarrApi, Instance> prowlarrApiProvider =
+final prowlarrApiProvider =
     FutureProvider.family<ProwlarrApi, Instance>((
       Ref ref,
       Instance instance,
@@ -25,8 +25,7 @@ final FutureProviderFamily<ProwlarrApi, Instance> prowlarrApiProvider =
     });
 
 /// All indexers for an instance, sorted by name. Polls slowly while watched.
-final AutoDisposeFutureProviderFamily<List<ProwlarrIndexer>, Instance>
-    prowlarrIndexersProvider =
+final prowlarrIndexersProvider =
     FutureProvider.autoDispose.family<List<ProwlarrIndexer>, Instance>((
       Ref ref,
       Instance instance,
@@ -45,8 +44,7 @@ final AutoDisposeFutureProviderFamily<List<ProwlarrIndexer>, Instance>
 
 /// Indexer stats keyed by indexerId, for badge counts in the list. Polls
 /// slowly while watched.
-final AutoDisposeFutureProviderFamily<Map<int, ProwlarrIndexerStat>, Instance>
-    prowlarrStatsByIdProvider =
+final prowlarrStatsByIdProvider =
     FutureProvider.autoDispose
         .family<Map<int, ProwlarrIndexerStat>, Instance>((
       Ref ref,

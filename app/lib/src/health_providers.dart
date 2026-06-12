@@ -14,7 +14,7 @@ final Provider<HealthProbe> healthProbeProvider = Provider<HealthProbe>((
 /// Delegates to [HealthProbe], which hits each service's own status endpoint
 /// with its real auth and distinguishes ok / warning (bad creds) / error
 /// (unreachable) - far more meaningful than a blind `GET /`.
-final FutureProviderFamily<Health, Instance> instanceHealthProvider =
+final instanceHealthProvider =
     FutureProvider.family<Health, Instance>((Ref ref, Instance instance) {
       return ref.watch(healthProbeProvider).check(instance);
     });

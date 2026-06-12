@@ -23,7 +23,7 @@ class EmbyItemDetailScreen extends ConsumerWidget {
     final AsyncValue<EmbyItem> itemAsync =
         ref.watch(embyItemDetailsProvider((instance, itemId)));
     final EmbyClient? client =
-        ref.watch(embyClientProvider(instance)).valueOrNull;
+        ref.watch(embyClientProvider(instance)).value;
 
     return Scaffold(
       appBar: AppBar(

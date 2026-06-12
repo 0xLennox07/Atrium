@@ -25,7 +25,7 @@ const Duration qbitDetailPollInterval = Duration(seconds: 10);
 /// Deliberately NOT autoDispose: the client holds the login session, and
 /// re-logging-in on every screen visit would hammer qBit's auth (and its
 /// failed-login ban counter on flaky networks).
-final FutureProviderFamily<QbittorrentClient, Instance> qbittorrentClientProvider =
+final qbittorrentClientProvider =
     FutureProvider.family<QbittorrentClient, Instance>((
       Ref ref,
       Instance instance,
@@ -53,8 +53,7 @@ final FutureProviderFamily<QbittorrentClient, Instance> qbittorrentClientProvide
 /// All torrents for an instance, sorted by most-recently-added first.
 /// Polls every [qbitListPollInterval] while watched; stops when the screen
 /// goes away (autoDispose).
-final AutoDisposeFutureProviderFamily<List<QbitTorrent>, Instance>
-    qbitTorrentsProvider =
+final qbitTorrentsProvider =
     FutureProvider.autoDispose.family<List<QbitTorrent>, Instance>((
       Ref ref,
       Instance instance,
@@ -68,8 +67,7 @@ final AutoDisposeFutureProviderFamily<List<QbitTorrent>, Instance>
     });
 
 /// Global transfer stats for an instance. Polls with the list.
-final AutoDisposeFutureProviderFamily<QbitTransferInfo, Instance>
-    qbitTransferProvider =
+final qbitTransferProvider =
     FutureProvider.autoDispose.family<QbitTransferInfo, Instance>((
       Ref ref,
       Instance instance,
@@ -82,8 +80,7 @@ final AutoDisposeFutureProviderFamily<QbitTransferInfo, Instance>
 
 /// Category names defined on an instance. Fetched on demand (no polling -
 /// categories rarely change).
-final AutoDisposeFutureProviderFamily<List<String>, Instance>
-    qbitCategoriesProvider =
+final qbitCategoriesProvider =
     FutureProvider.autoDispose.family<List<String>, Instance>((
       Ref ref,
       Instance instance,
@@ -94,8 +91,7 @@ final AutoDisposeFutureProviderFamily<List<String>, Instance>
     });
 
 /// Detailed properties for one torrent, keyed by (instance, hash).
-final AutoDisposeFutureProviderFamily<QbitTorrentProperties, (Instance, String)>
-    qbitPropertiesProvider = FutureProvider.autoDispose
+final qbitPropertiesProvider = FutureProvider.autoDispose
         .family<QbitTorrentProperties, (Instance, String)>((
       Ref ref,
       (Instance, String) key,
@@ -108,8 +104,7 @@ final AutoDisposeFutureProviderFamily<QbitTorrentProperties, (Instance, String)>
     });
 
 /// File list for one torrent, keyed by (instance, hash).
-final AutoDisposeFutureProviderFamily<List<QbitFile>, (Instance, String)>
-    qbitFilesProvider =
+final qbitFilesProvider =
     FutureProvider.autoDispose.family<List<QbitFile>, (Instance, String)>((
       Ref ref,
       (Instance, String) key,
@@ -122,8 +117,7 @@ final AutoDisposeFutureProviderFamily<List<QbitFile>, (Instance, String)>
     });
 
 /// Tracker list for one torrent, keyed by (instance, hash).
-final AutoDisposeFutureProviderFamily<List<QbitTracker>, (Instance, String)>
-    qbitTrackersProvider =
+final qbitTrackersProvider =
     FutureProvider.autoDispose.family<List<QbitTracker>, (Instance, String)>((
       Ref ref,
       (Instance, String) key,

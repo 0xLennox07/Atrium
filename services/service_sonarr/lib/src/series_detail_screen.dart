@@ -29,7 +29,7 @@ class SeriesDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(series.valueOrNull?.title ?? 'Series'),
+        title: Text(series.value?.title ?? 'Series'),
         actions: <Widget>[
           if (series.hasValue)
             _SeriesMenu(
@@ -61,7 +61,7 @@ class _Body extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final SonarrApi? api = ref.watch(sonarrApiProvider(instance)).valueOrNull;
+    final SonarrApi? api = ref.watch(sonarrApiProvider(instance)).value;
     final SonarrImage? poster = series.images
         .firstWhereOrNull((SonarrImage i) => i.coverType == 'poster');
     final String? imageUrl = poster == null ? null : api?.posterUrl(poster);

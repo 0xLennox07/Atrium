@@ -6,7 +6,7 @@ import 'models/sab_queue.dart';
 import 'sabnzbd_api.dart';
 
 /// A [SabnzbdApi] for an instance, over the shared `instanceDioProvider`.
-final FutureProviderFamily<SabnzbdApi, Instance> sabnzbdApiProvider =
+final sabnzbdApiProvider =
     FutureProvider.family<SabnzbdApi, Instance>((
       Ref ref,
       Instance instance,
@@ -16,7 +16,7 @@ final FutureProviderFamily<SabnzbdApi, Instance> sabnzbdApiProvider =
     });
 
 /// The current download queue for an instance.
-final FutureProviderFamily<SabQueue, Instance> sabQueueProvider =
+final sabQueueProvider =
     FutureProvider.family<SabQueue, Instance>((Ref ref, Instance instance) async {
       final SabnzbdApi api = await ref.watch(sabnzbdApiProvider(instance).future);
       return api.getQueue();

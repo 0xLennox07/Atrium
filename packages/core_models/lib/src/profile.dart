@@ -18,7 +18,7 @@ part 'profile.g.dart';
 /// The active profile is tracked separately by the profile package; this
 /// model is just the shape on disk.
 @freezed
-class Profile with _$Profile {
+abstract class Profile with _$Profile {
   const factory Profile({
     required String id,
     required String name,

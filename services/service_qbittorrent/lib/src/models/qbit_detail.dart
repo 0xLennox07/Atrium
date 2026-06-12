@@ -7,7 +7,7 @@ part 'qbit_detail.g.dart';
 ///
 /// Only the fields the detail screen renders are modeled.
 @freezed
-class QbitTorrentProperties with _$QbitTorrentProperties {
+abstract class QbitTorrentProperties with _$QbitTorrentProperties {
   const factory QbitTorrentProperties({
     @JsonKey(name: 'save_path') @Default('') String savePath,
     @JsonKey(name: 'creation_date') @Default(0) int creationDate,
@@ -38,7 +38,7 @@ class QbitTorrentProperties with _$QbitTorrentProperties {
 
 /// One file inside a torrent, from `GET /api/v2/torrents/files`.
 @freezed
-class QbitFile with _$QbitFile {
+abstract class QbitFile with _$QbitFile {
   const factory QbitFile({
     /// File index used by `/torrents/filePrio`.
     @Default(0) int index,
@@ -59,7 +59,7 @@ class QbitFile with _$QbitFile {
 /// qBittorrent also returns synthetic rows (`** [DHT] **`, `** [PeX] **`,
 /// `** [LSD] **`) - keep or filter at the UI layer.
 @freezed
-class QbitTracker with _$QbitTracker {
+abstract class QbitTracker with _$QbitTracker {
   const factory QbitTracker({
     @Default('') String url,
     /// 0 disabled, 1 not-contacted, 2 working, 3 updating, 4 not-working.

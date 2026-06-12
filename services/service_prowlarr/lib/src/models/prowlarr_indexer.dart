@@ -7,7 +7,7 @@ part 'prowlarr_indexer.g.dart';
 ///
 /// Only the fields Atrium renders are modeled; Prowlarr returns many more.
 @freezed
-class ProwlarrIndexer with _$ProwlarrIndexer {
+abstract class ProwlarrIndexer with _$ProwlarrIndexer {
   const factory ProwlarrIndexer({
     required int id,
     required String name,

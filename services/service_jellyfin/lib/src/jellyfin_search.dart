@@ -63,7 +63,7 @@ class _SearchResults extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final JellyfinClient? client =
-        ref.watch(jellyfinClientProvider(instance)).valueOrNull;
+        ref.watch(jellyfinClientProvider(instance)).value;
 
     if (client == null) {
       return const Center(child: CircularProgressIndicator());

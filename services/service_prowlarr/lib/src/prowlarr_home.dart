@@ -24,7 +24,7 @@ class ProwlarrHome extends ConsumerWidget {
     final AsyncValue<List<ProwlarrIndexer>> indexers =
         ref.watch(prowlarrIndexersProvider(instance));
     final Map<int, ProwlarrIndexerStat> stats =
-        ref.watch(prowlarrStatsByIdProvider(instance)).valueOrNull ??
+        ref.watch(prowlarrStatsByIdProvider(instance)).value ??
             const <int, ProwlarrIndexerStat>{};
 
     return Scaffold(

@@ -5,7 +5,7 @@ part 'jellyfin_view.g.dart';
 
 /// A Jellyfin library/view from `GET /Users/{userId}/Views`.
 @freezed
-class JellyfinView with _$JellyfinView {
+abstract class JellyfinView with _$JellyfinView {
   const factory JellyfinView({
     @JsonKey(name: 'Id') required String id,
     @JsonKey(name: 'Name') @Default('') String name,

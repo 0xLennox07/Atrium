@@ -6,14 +6,14 @@ import 'bazarr_api.dart';
 import 'models/bazarr_models.dart';
 
 /// A [BazarrApi] for an instance, over the shared `instanceDioProvider`.
-final FutureProviderFamily<BazarrApi, Instance> bazarrApiProvider =
+final bazarrApiProvider =
     FutureProvider.family<BazarrApi, Instance>((Ref ref, Instance instance) async {
       final dio = await ref.watch(instanceDioProvider(instance).future);
       return BazarrApi(dio);
     });
 
 /// Summary badge counts for an instance.
-final FutureProviderFamily<BazarrBadges, Instance> bazarrBadgesProvider =
+final bazarrBadgesProvider =
     FutureProvider.family<BazarrBadges, Instance>((
       Ref ref,
       Instance instance,
@@ -23,7 +23,7 @@ final FutureProviderFamily<BazarrBadges, Instance> bazarrBadgesProvider =
     });
 
 /// The unified "wanted subtitles" list (episodes + movies) for an instance.
-final FutureProviderFamily<List<BazarrWantedRow>, Instance> bazarrWantedProvider =
+final bazarrWantedProvider =
     FutureProvider.family<List<BazarrWantedRow>, Instance>((
       Ref ref,
       Instance instance,

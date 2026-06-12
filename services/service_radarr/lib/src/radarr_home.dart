@@ -67,7 +67,7 @@ class _MoviesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<RadarrMovie>> movies =
         ref.watch(radarrMoviesProvider(instance));
-    final RadarrApi? api = ref.watch(radarrApiProvider(instance)).valueOrNull;
+    final RadarrApi? api = ref.watch(radarrApiProvider(instance)).value;
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(radarrMoviesProvider(instance)),
       child: AsyncValueView<List<RadarrMovie>>(

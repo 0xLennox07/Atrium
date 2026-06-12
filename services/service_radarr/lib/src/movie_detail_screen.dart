@@ -28,7 +28,7 @@ class MovieDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(movie.valueOrNull?.title ?? 'Movie'),
+        title: Text(movie.value?.title ?? 'Movie'),
         actions: <Widget>[
           if (movie.hasValue)
             _MovieMenu(instance: instance, movie: movie.requireValue),
@@ -58,7 +58,7 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
-    final RadarrApi? api = ref.watch(radarrApiProvider(instance)).valueOrNull;
+    final RadarrApi? api = ref.watch(radarrApiProvider(instance)).value;
     final RadarrImage? poster = movie.images
         .firstWhereOrNull((RadarrImage i) => i.coverType == 'poster');
     final String? imageUrl = poster == null ? null : api?.posterUrl(poster);

@@ -120,7 +120,7 @@ class _ItemsGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<PlexMetadata>> items = ref.watch(_provider);
-    final PlexApi? api = ref.watch(plexApiProvider(instance)).valueOrNull;
+    final PlexApi? api = ref.watch(plexApiProvider(instance)).value;
 
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(_provider),

@@ -5,7 +5,7 @@ part 'sonarr_queue.g.dart';
 
 /// A page of queue records from `GET /api/v3/queue`.
 @freezed
-class SonarrQueuePage with _$SonarrQueuePage {
+abstract class SonarrQueuePage with _$SonarrQueuePage {
   const factory SonarrQueuePage({
     @Default(0) int page,
     @Default(0) int pageSize,
@@ -19,7 +19,7 @@ class SonarrQueuePage with _$SonarrQueuePage {
 
 /// One item being downloaded / imported.
 @freezed
-class SonarrQueueRecord with _$SonarrQueueRecord {
+abstract class SonarrQueueRecord with _$SonarrQueueRecord {
   const factory SonarrQueueRecord({
     required int id,
     int? seriesId,

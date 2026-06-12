@@ -11,7 +11,7 @@ import 'models/jellyfin_view.dart';
 /// Like qBittorrent, Jellyfin can't reuse `instanceDioProvider` - it needs a
 /// token acquired at runtime rather than a static key - so it resolves the
 /// base URL via the shared [ConnectionResolver] and builds its own Dio.
-final FutureProviderFamily<JellyfinClient, Instance> jellyfinClientProvider =
+final jellyfinClientProvider =
     FutureProvider.family<JellyfinClient, Instance>((
   Ref ref,
   Instance instance,
@@ -37,7 +37,7 @@ final FutureProviderFamily<JellyfinClient, Instance> jellyfinClientProvider =
 });
 
 /// Libraries for an instance.
-final FutureProviderFamily<List<JellyfinView>, Instance> jellyfinViewsProvider =
+final jellyfinViewsProvider =
     FutureProvider.family<List<JellyfinView>, Instance>((
   Ref ref,
   Instance instance,
@@ -49,8 +49,7 @@ final FutureProviderFamily<List<JellyfinView>, Instance> jellyfinViewsProvider =
 
 /// Items within a library. Keyed by (instance, libraryId) - Dart 3 records
 /// give the family a structural-equality cache key for free.
-final FutureProviderFamily<List<JellyfinItem>, (Instance, String)>
-    jellyfinItemsProvider =
+final jellyfinItemsProvider =
     FutureProvider.family<List<JellyfinItem>, (Instance, String)>((
   Ref ref,
   (Instance, String) key,
@@ -61,8 +60,7 @@ final FutureProviderFamily<List<JellyfinItem>, (Instance, String)>
   return client.getItems(libraryId);
 });
 
-final FutureProviderFamily<List<JellyfinItem>, Instance>
-    jellyfinResumeItemsProvider =
+final jellyfinResumeItemsProvider =
     FutureProvider.family<List<JellyfinItem>, Instance>((
   Ref ref,
   Instance instance,
@@ -72,7 +70,7 @@ final FutureProviderFamily<List<JellyfinItem>, Instance>
   return client.getResumeItems();
 });
 
-final FutureProviderFamily<List<JellyfinItem>, Instance> jellyfinNextUpProvider =
+final jellyfinNextUpProvider =
     FutureProvider.family<List<JellyfinItem>, Instance>((
   Ref ref,
   Instance instance,
@@ -82,7 +80,7 @@ final FutureProviderFamily<List<JellyfinItem>, Instance> jellyfinNextUpProvider 
   return client.getNextUp();
 });
 
-final FutureProviderFamily<List<JellyfinItem>, Instance> jellyfinFavoritesProvider =
+final jellyfinFavoritesProvider =
     FutureProvider.family<List<JellyfinItem>, Instance>((
   Ref ref,
   Instance instance,
@@ -92,7 +90,7 @@ final FutureProviderFamily<List<JellyfinItem>, Instance> jellyfinFavoritesProvid
   return client.getFavorites();
 });
 
-final FutureProviderFamily<List<JellyfinItem>, Instance> jellyfinLatestItemsProvider =
+final jellyfinLatestItemsProvider =
     FutureProvider.family<List<JellyfinItem>, Instance>((
   Ref ref,
   Instance instance,
@@ -102,8 +100,7 @@ final FutureProviderFamily<List<JellyfinItem>, Instance> jellyfinLatestItemsProv
   return client.getLatestItems();
 });
 
-final FutureProviderFamily<JellyfinItem, (Instance, String)>
-    jellyfinItemDetailsProvider =
+final jellyfinItemDetailsProvider =
     FutureProvider.family<JellyfinItem, (Instance, String)>((
   Ref ref,
   (Instance, String) key,
@@ -114,8 +111,7 @@ final FutureProviderFamily<JellyfinItem, (Instance, String)>
   return client.getItemDetails(itemId);
 });
 
-final FutureProviderFamily<List<JellyfinItem>, (Instance, String)>
-    jellyfinSeasonsProvider =
+final jellyfinSeasonsProvider =
     FutureProvider.family<List<JellyfinItem>, (Instance, String)>((
   Ref ref,
   (Instance, String) key,
@@ -126,8 +122,7 @@ final FutureProviderFamily<List<JellyfinItem>, (Instance, String)>
   return client.getSeasons(seriesId);
 });
 
-final FutureProviderFamily<List<JellyfinItem>, (Instance, String, String)>
-    jellyfinEpisodesProvider =
+final jellyfinEpisodesProvider =
     FutureProvider.family<List<JellyfinItem>, (Instance, String, String)>((
   Ref ref,
   (Instance, String, String) key,

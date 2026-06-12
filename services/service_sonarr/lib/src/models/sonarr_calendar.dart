@@ -5,7 +5,7 @@ part 'sonarr_calendar.g.dart';
 
 /// A calendar entry (an episode airing) from `GET /api/v3/calendar`.
 @freezed
-class SonarrCalendarEntry with _$SonarrCalendarEntry {
+abstract class SonarrCalendarEntry with _$SonarrCalendarEntry {
   const factory SonarrCalendarEntry({
     required int id,
     required int seriesId,

@@ -8,7 +8,7 @@ part 'radarr_movie.g.dart';
 /// Only the fields Atrium currently renders are modeled; Radarr returns many
 /// more. Unmodeled fields are ignored by json_serializable.
 @freezed
-class RadarrMovie with _$RadarrMovie {
+abstract class RadarrMovie with _$RadarrMovie {
   const factory RadarrMovie({
     required int id,
     required String title,
@@ -29,7 +29,7 @@ class RadarrMovie with _$RadarrMovie {
 }
 
 @freezed
-class RadarrRatings with _$RadarrRatings {
+abstract class RadarrRatings with _$RadarrRatings {
   const factory RadarrRatings({
     RadarrRatingValue? imdb,
     RadarrRatingValue? tmdb,
@@ -41,7 +41,7 @@ class RadarrRatings with _$RadarrRatings {
 }
 
 @freezed
-class RadarrRatingValue with _$RadarrRatingValue {
+abstract class RadarrRatingValue with _$RadarrRatingValue {
   const factory RadarrRatingValue({
     @Default(0) double value,
     @Default(0) int votes,
@@ -52,7 +52,7 @@ class RadarrRatingValue with _$RadarrRatingValue {
 }
 
 @freezed
-class RadarrImage with _$RadarrImage {
+abstract class RadarrImage with _$RadarrImage {
   const factory RadarrImage({
     required String coverType,
     String? remoteUrl,

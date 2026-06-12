@@ -5,7 +5,7 @@ part 'qbit_transfer_info.g.dart';
 
 /// Global transfer stats from `GET /api/v2/transfer/info`.
 @freezed
-class QbitTransferInfo with _$QbitTransferInfo {
+abstract class QbitTransferInfo with _$QbitTransferInfo {
   const factory QbitTransferInfo({
     /// Global download speed, bytes/s.
     @JsonKey(name: 'dl_info_speed') @Default(0) int dlSpeed,

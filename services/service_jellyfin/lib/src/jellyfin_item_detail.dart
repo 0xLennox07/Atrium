@@ -23,7 +23,7 @@ class JellyfinItemDetailScreen extends ConsumerWidget {
     final AsyncValue<JellyfinItem> itemAsync =
         ref.watch(jellyfinItemDetailsProvider((instance, itemId)));
     final JellyfinClient? client =
-        ref.watch(jellyfinClientProvider(instance)).valueOrNull;
+        ref.watch(jellyfinClientProvider(instance)).value;
 
     return Scaffold(
       appBar: AppBar(

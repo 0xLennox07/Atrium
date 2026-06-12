@@ -133,7 +133,7 @@ class EmbyItemsGrid extends ConsumerWidget {
     final AsyncValue<List<EmbyItem>> items =
         ref.watch(embyItemsProvider((instance, libraryId)));
     final EmbyClient? client =
-        ref.watch(embyClientProvider(instance)).valueOrNull;
+        ref.watch(embyClientProvider(instance)).value;
 
     return RefreshIndicator(
       onRefresh: () async =>
@@ -204,11 +204,11 @@ class EmbyFolderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final EmbyClient? client =
-        ref.watch(embyClientProvider(instance)).valueOrNull;
+        ref.watch(embyClientProvider(instance)).value;
     final AsyncValue<EmbyItem> itemAsync =
         ref.watch(embyItemDetailsProvider((instance, item.id)));
         
-    final EmbyItem currentItem = itemAsync.valueOrNull ?? item;
+    final EmbyItem currentItem = itemAsync.value ?? item;
 
     return Scaffold(
       appBar: AppBar(
@@ -283,7 +283,7 @@ class EmbyPosterCard extends ConsumerWidget {
                     onTap: () async {
                       Navigator.of(context).pop();
                       final EmbyClient? client =
-                          ref.read(embyClientProvider(instance)).valueOrNull;
+                          ref.read(embyClientProvider(instance)).value;
                       if (client != null) {
                         final bool isFav =
                             item.userData?.isFavorite == true;
@@ -453,7 +453,7 @@ class _HorizontalSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<EmbyItem>> items = ref.watch(provider);
     final EmbyClient? client =
-        ref.watch(embyClientProvider(instance)).valueOrNull;
+        ref.watch(embyClientProvider(instance)).value;
 
     return AsyncValueView<List<EmbyItem>>(
       value: items,
@@ -543,7 +543,7 @@ class _VerticalSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<EmbyItem>> items = ref.watch(provider);
     final EmbyClient? client =
-        ref.watch(embyClientProvider(instance)).valueOrNull;
+        ref.watch(embyClientProvider(instance)).value;
 
     return AsyncValueView<List<EmbyItem>>(
       value: items,

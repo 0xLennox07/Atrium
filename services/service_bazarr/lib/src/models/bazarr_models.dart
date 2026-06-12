@@ -5,7 +5,7 @@ part 'bazarr_models.g.dart';
 
 /// `GET /api/badges` → summary counts shown in the header.
 @freezed
-class BazarrBadges with _$BazarrBadges {
+abstract class BazarrBadges with _$BazarrBadges {
   const factory BazarrBadges({
     @Default(0) int episodes,
     @Default(0) int movies,
@@ -18,7 +18,7 @@ class BazarrBadges with _$BazarrBadges {
 
 /// `GET /api/episodes/wanted` → `{ "data": [ … ], "total": N }`.
 @freezed
-class BazarrWantedEpisodes with _$BazarrWantedEpisodes {
+abstract class BazarrWantedEpisodes with _$BazarrWantedEpisodes {
   const factory BazarrWantedEpisodes({
     @Default(<BazarrWantedEpisode>[]) List<BazarrWantedEpisode> data,
     @Default(0) int total,
@@ -29,7 +29,7 @@ class BazarrWantedEpisodes with _$BazarrWantedEpisodes {
 }
 
 @freezed
-class BazarrWantedEpisode with _$BazarrWantedEpisode {
+abstract class BazarrWantedEpisode with _$BazarrWantedEpisode {
   const factory BazarrWantedEpisode({
     @JsonKey(name: 'seriesTitle') @Default('') String seriesTitle,
     @JsonKey(name: 'episodeTitle') @Default('') String episodeTitle,
@@ -45,7 +45,7 @@ class BazarrWantedEpisode with _$BazarrWantedEpisode {
 
 /// `GET /api/movies/wanted` → `{ "data": [ … ], "total": N }`.
 @freezed
-class BazarrWantedMovies with _$BazarrWantedMovies {
+abstract class BazarrWantedMovies with _$BazarrWantedMovies {
   const factory BazarrWantedMovies({
     @Default(<BazarrWantedMovie>[]) List<BazarrWantedMovie> data,
     @Default(0) int total,
@@ -56,7 +56,7 @@ class BazarrWantedMovies with _$BazarrWantedMovies {
 }
 
 @freezed
-class BazarrWantedMovie with _$BazarrWantedMovie {
+abstract class BazarrWantedMovie with _$BazarrWantedMovie {
   const factory BazarrWantedMovie({
     @Default('') String title,
     @JsonKey(name: 'missing_subtitles')
@@ -69,7 +69,7 @@ class BazarrWantedMovie with _$BazarrWantedMovie {
 }
 
 @freezed
-class BazarrSubtitle with _$BazarrSubtitle {
+abstract class BazarrSubtitle with _$BazarrSubtitle {
   const factory BazarrSubtitle({
     @Default('') String name,
     @Default('') String code2,

@@ -63,7 +63,7 @@ class _SearchResults extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final EmbyClient? client =
-        ref.watch(embyClientProvider(instance)).valueOrNull;
+        ref.watch(embyClientProvider(instance)).value;
 
     if (client == null) {
       return const Center(child: CircularProgressIndicator());

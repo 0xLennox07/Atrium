@@ -133,7 +133,7 @@ class JellyfinItemsGrid extends ConsumerWidget {
     final AsyncValue<List<JellyfinItem>> items =
         ref.watch(jellyfinItemsProvider((instance, libraryId)));
     final JellyfinClient? client =
-        ref.watch(jellyfinClientProvider(instance)).valueOrNull;
+        ref.watch(jellyfinClientProvider(instance)).value;
 
     return RefreshIndicator(
       onRefresh: () async =>
@@ -204,11 +204,11 @@ class JellyfinFolderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final JellyfinClient? client =
-        ref.watch(jellyfinClientProvider(instance)).valueOrNull;
+        ref.watch(jellyfinClientProvider(instance)).value;
     final AsyncValue<JellyfinItem> itemAsync =
         ref.watch(jellyfinItemDetailsProvider((instance, item.id)));
         
-    final JellyfinItem currentItem = itemAsync.valueOrNull ?? item;
+    final JellyfinItem currentItem = itemAsync.value ?? item;
 
     return Scaffold(
       appBar: AppBar(
@@ -283,7 +283,7 @@ class JellyfinPosterCard extends ConsumerWidget {
                     onTap: () async {
                       Navigator.of(context).pop();
                       final JellyfinClient? client =
-                          ref.read(jellyfinClientProvider(instance)).valueOrNull;
+                          ref.read(jellyfinClientProvider(instance)).value;
                       if (client != null) {
                         final bool isFav =
                             item.userData?.isFavorite == true;
@@ -453,7 +453,7 @@ class _HorizontalSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<JellyfinItem>> items = ref.watch(provider);
     final JellyfinClient? client =
-        ref.watch(jellyfinClientProvider(instance)).valueOrNull;
+        ref.watch(jellyfinClientProvider(instance)).value;
 
     return AsyncValueView<List<JellyfinItem>>(
       value: items,
@@ -543,7 +543,7 @@ class _VerticalSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<JellyfinItem>> items = ref.watch(provider);
     final JellyfinClient? client =
-        ref.watch(jellyfinClientProvider(instance)).valueOrNull;
+        ref.watch(jellyfinClientProvider(instance)).value;
 
     return AsyncValueView<List<JellyfinItem>>(
       value: items,
