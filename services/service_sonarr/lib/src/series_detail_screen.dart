@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/sonarr_series.dart';
+import 'models/sonarr_episode.dart';
 import 'sonarr_api.dart';
 import 'sonarr_providers.dart';
+import 'sonarr_release_search_screen.dart';
+import 'package:intl/intl.dart';
 
 /// Detail view for one Sonarr series: poster header, stats, season list with
 /// per-season monitor toggles and search, plus series-level actions
@@ -57,6 +60,7 @@ class _Body extends ConsumerWidget {
   void _refresh(WidgetRef ref) {
     ref.invalidate(sonarrSeriesByIdProvider((instance, series.id)));
     ref.invalidate(sonarrSeriesProvider(instance));
+    ref.invalidate(sonarrEpisodesProvider((instance, series.id)));
   }
 
   @override
@@ -73,6 +77,9 @@ class _Body extends ConsumerWidget {
         );
     final SonarrSeasonStats? specials = series.seasons
         .firstWhereOrNull((SonarrSeasonStats s) => s.seasonNumber == 0);
+
+    final AsyncValue<List<SonarrEpisode>> episodesValue =
+        ref.watch(sonarrEpisodesProvider((instance, series.id)));
 
     return RefreshIndicator(
       onRefresh: () async => _refresh(ref),
@@ -99,6 +106,7 @@ class _Body extends ConsumerWidget {
               series: series,
               season: season,
               onChanged: _refresh,
+              episodesValue: episodesValue,
             ),
           if (specials != null)
             _SeasonTile(
@@ -106,6 +114,7 @@ class _Body extends ConsumerWidget {
               series: series,
               season: specials,
               onChanged: _refresh,
+              episodesValue: episodesValue,
             ),
           const SizedBox(height: Insets.xl),
         ],
@@ -262,12 +271,14 @@ class _SeasonTile extends ConsumerWidget {
     required this.series,
     required this.season,
     required this.onChanged,
+    required this.episodesValue,
   });
 
   final Instance instance;
   final SonarrSeries series;
   final SonarrSeasonStats season;
   final void Function(WidgetRef) onChanged;
+  final AsyncValue<List<SonarrEpisode>> episodesValue;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -276,16 +287,17 @@ class _SeasonTile extends ConsumerWidget {
         ? 'Specials'
         : 'Season ${season.seasonNumber}';
 
+    final String statsStr = st == null
+        ? ''
+        : '${st.episodeFileCount}/${st.totalEpisodeCount} episodes'
+            '${st.sizeOnDisk > 0 ? ' • ${_fmtSize(st.sizeOnDisk)}' : ''}';
+
     return Card(
       margin: const EdgeInsets.only(bottom: Insets.sm),
-      child: ListTile(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
         title: Text(label),
-        subtitle: st == null
-            ? null
-            : Text(
-                '${st.episodeFileCount}/${st.totalEpisodeCount} episodes'
-                '${st.sizeOnDisk > 0 ? ' • ${_fmtSize(st.sizeOnDisk)}' : ''}',
-              ),
+        subtitle: Text(statsStr),
         leading: IconButton(
           tooltip: season.monitored ? 'Unmonitor season' : 'Monitor season',
           icon: Icon(
@@ -293,20 +305,74 @@ class _SeasonTile extends ConsumerWidget {
           ),
           onPressed: () => _toggleSeason(ref),
         ),
-        trailing: IconButton(
-          tooltip: 'Search season',
-          icon: const Icon(Icons.search),
-          onPressed: () async {
-            final SonarrApi api =
-                await ref.read(sonarrApiProvider(instance).future);
-            await api.searchSeason(series.id, season.seasonNumber);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Search started for $label')),
-              );
-            }
-          },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            IconButton(
+              tooltip: 'Search season',
+              icon: const Icon(Icons.search),
+              onPressed: () async {
+                final SonarrApi api =
+                    await ref.read(sonarrApiProvider(instance).future);
+                await api.searchSeason(series.id, season.seasonNumber);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Search started for $label')),
+                  );
+                }
+              },
+            ),
+            const Icon(Icons.expand_more),
+          ],
         ),
+        children: <Widget>[
+          const Divider(height: 1),
+          episodesValue.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: Insets.md),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (Object err, StackTrace? stack) => Padding(
+              padding: const EdgeInsets.all(Insets.md),
+              child: Center(
+                child: Text(
+                  'Error loading episodes: $err',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ),
+            data: (List<SonarrEpisode> list) {
+              final List<SonarrEpisode> seasonEpisodes = list
+                  .where((SonarrEpisode ep) => ep.seasonNumber == season.seasonNumber)
+                  .toList();
+
+              if (seasonEpisodes.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: Insets.md),
+                  child: Center(child: Text('No episodes found')),
+                );
+              }
+
+              // Sort by episode number ascending
+              seasonEpisodes.sort((SonarrEpisode a, SonarrEpisode b) =>
+                  a.episodeNumber - b.episodeNumber);
+
+              return Column(
+                children: <Widget>[
+                  for (final SonarrEpisode ep in seasonEpisodes) ...[
+                    _EpisodeTile(
+                      instance: instance,
+                      seriesId: series.id,
+                      episode: ep,
+                    ),
+                    if (ep != seasonEpisodes.last) const Divider(height: 1, indent: Insets.xl),
+                  ],
+                  const SizedBox(height: Insets.xs),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -323,6 +389,142 @@ class _SeasonTile extends ConsumerWidget {
     }
     await api.updateSeriesRaw(raw);
     onChanged(ref);
+  }
+}
+
+class _EpisodeTile extends ConsumerWidget {
+  const _EpisodeTile({
+    required this.instance,
+    required this.seriesId,
+    required this.episode,
+  });
+
+  final Instance instance;
+  final int seriesId;
+  final SonarrEpisode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeData theme = Theme.of(context);
+    final String epCode = 'E${episode.episodeNumber.toString().padLeft(2, '0')}';
+    final DateTime? airDate = episode.airDateUtc?.toLocal();
+    final String airDateStr = airDate != null
+        ? DateFormat('yMMMd').format(airDate)
+        : 'Unknown air date';
+
+    final bool isFuture = airDate != null && airDate.isAfter(DateTime.now());
+    final (String label, Color bg, Color fg) = episode.hasFile
+        ? (
+            'Downloaded',
+            theme.colorScheme.primaryContainer,
+            theme.colorScheme.onPrimaryContainer,
+          )
+        : isFuture
+            ? (
+                'Upcoming',
+                theme.colorScheme.secondaryContainer,
+                theme.colorScheme.onSecondaryContainer,
+              )
+            : (
+                'Missing',
+                theme.colorScheme.errorContainer,
+                theme.colorScheme.onErrorContainer,
+              );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: Insets.md),
+      child: Row(
+        children: <Widget>[
+          // Monitored Toggle
+          IconButton(
+            icon: Icon(
+              episode.monitored ? Icons.bookmark : Icons.bookmark_border,
+              size: 20,
+              color: episode.monitored ? theme.colorScheme.primary : theme.colorScheme.outline,
+            ),
+            tooltip: episode.monitored ? 'Stop monitoring' : 'Monitor episode',
+            onPressed: () async {
+              final SonarrApi api = await ref.read(sonarrApiProvider(instance).future);
+              await api.updateEpisode(episode.copyWith(monitored: !episode.monitored));
+              ref.invalidate(sonarrEpisodesProvider((instance, seriesId)));
+            },
+          ),
+          const SizedBox(width: Insets.xs),
+          // Episode info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '$epCode • ${episode.title ?? "Episode ${episode.episodeNumber}"}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  airDateStr,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: Insets.sm),
+          // Status Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: fg,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: Insets.xs),
+          // Manual Search Button
+          IconButton(
+            icon: const Icon(Icons.manage_search, size: 20),
+            tooltip: 'Manual search',
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => SonarrReleaseSearchScreen(
+                    instance: instance,
+                    episode: episode,
+                  ),
+                ),
+              );
+            },
+          ),
+          // Search Button (Automatic)
+          IconButton(
+            icon: const Icon(Icons.search, size: 20),
+            tooltip: 'Automatic search',
+            onPressed: () async {
+              final SonarrApi api = await ref.read(sonarrApiProvider(instance).future);
+              await api.searchEpisode(episode.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Search started for $epCode • ${episode.title ?? "Episode"}',
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -3,7 +3,9 @@ import 'package:dio/dio.dart';
 
 import 'models/sonarr_add_models.dart';
 import 'models/sonarr_calendar.dart';
+import 'models/sonarr_episode.dart';
 import 'models/sonarr_queue.dart';
+import 'models/sonarr_release.dart';
 import 'models/sonarr_series.dart';
 
 /// Thin typed client over the Sonarr v3 REST API.
@@ -32,6 +34,74 @@ class SonarrApi {
 
   Future<SonarrSeries> getSeriesById(int id) async {
     return _one<SonarrSeries>('$_base/series/$id', SonarrSeries.fromJson);
+  }
+
+  Future<List<SonarrEpisode>> getEpisodes(int seriesId) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/episode',
+        queryParameters: <String, dynamic>{'seriesId': seriesId},
+      );
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrEpisode.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateEpisode(SonarrEpisode episode) async {
+    try {
+      await _dio.put<dynamic>(
+        '$_base/episode/${episode.id}',
+        data: episode.toJson(),
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> searchEpisode(int episodeId) async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/command',
+        data: <String, dynamic>{
+          'name': 'EpisodeSearch',
+          'episodeIds': <int>[episodeId],
+        },
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrRelease>> getReleases(int episodeId) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/release',
+        queryParameters: <String, dynamic>{'episodeId': episodeId},
+        options: Options(
+          receiveTimeout: const Duration(seconds: 120),
+          sendTimeout: const Duration(seconds: 120),
+        ),
+      );
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrRelease(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> grabRelease(SonarrRelease release) async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/release',
+        data: release.raw,
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
   }
 
   Future<SonarrQueuePage> getQueue({
