@@ -85,12 +85,12 @@ void main() {
       <Override>[
         tautulliActivityProvider(instance).overrideWith(
           (Ref ref) async => const TautulliActivity(
-            streamCount: '1',
+            streamCount: 1,
             sessions: <TautulliSession>[
               TautulliSession(
                 friendlyName: 'Alice',
                 fullTitle: 'The Matrix',
-                progressPercent: '30',
+                progressPercent: 30,
                 state: 'playing',
                 player: 'Living Room TV',
               ),
