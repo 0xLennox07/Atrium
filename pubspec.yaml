@@ -29,3 +29,4 @@ workspace:
   - services/service_plex
   - services/service_qbittorrent
   - services/service_sabnzbd
+  - services/service_glances

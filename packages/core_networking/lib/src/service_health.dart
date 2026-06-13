@@ -54,6 +54,8 @@ enum _HealthMode {
     // response means the WebUI is up.
     case ServiceKind.qbittorrent:
       return (path: 'api/v2/app/version', mode: _HealthMode.reachable);
+    case ServiceKind.glances:
+      return (path: 'api/4/core', mode: _HealthMode.authed);
   }
 }
 

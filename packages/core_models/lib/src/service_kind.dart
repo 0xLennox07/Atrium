@@ -15,6 +15,7 @@ enum ServiceKind {
   plex,
   qbittorrent,
   sabnzbd,
+  glances,
 }
 
 /// Static metadata about a [ServiceKind] - display name, default port, the
@@ -35,6 +36,7 @@ extension ServiceKindX on ServiceKind {
         ServiceKind.plex => 'Plex',
         ServiceKind.qbittorrent => 'qBittorrent',
         ServiceKind.sabnzbd => 'SABnzbd',
+        ServiceKind.glances => 'Glances',
       };
 
   /// One-line role description.
@@ -50,6 +52,7 @@ extension ServiceKindX on ServiceKind {
         ServiceKind.plex => 'Media server',
         ServiceKind.qbittorrent => 'Torrent client',
         ServiceKind.sabnzbd => 'Usenet client',
+        ServiceKind.glances => 'System monitor',
       };
 
   /// Vendor-default port. Used as a hint when the user is entering a URL
@@ -66,6 +69,7 @@ extension ServiceKindX on ServiceKind {
         ServiceKind.plex => 32400,
         ServiceKind.qbittorrent => 8080,
         ServiceKind.sabnzbd => 8080,
+        ServiceKind.glances => 61208,
       };
 
   /// What auth flow the service uses by default. Some services (Jellyfin) can
@@ -82,6 +86,7 @@ extension ServiceKindX on ServiceKind {
         ServiceKind.jellyfin || ServiceKind.emby => AuthStyle.userPass,
         ServiceKind.plex => AuthStyle.plexToken,
         ServiceKind.qbittorrent => AuthStyle.cookieLogin,
+        ServiceKind.glances => AuthStyle.none,
       };
 
   /// Broad role of the service in the stack - used for grouping in the
@@ -101,6 +106,7 @@ extension ServiceKindX on ServiceKind {
         ServiceKind.qbittorrent ||
         ServiceKind.sabnzbd =>
           ServiceRole.downloader,
+        ServiceKind.glances => ServiceRole.analytics,
       };
 }
 
@@ -119,6 +125,9 @@ enum AuthStyle {
   /// Username + password login that returns a cookie carried on subsequent
   /// requests (qBittorrent).
   cookieLogin,
+
+  /// No authentication required.
+  none,
 }
 
 /// Coarse grouping for the dashboard.

@@ -14,6 +14,7 @@ import 'package:service_qbittorrent/service_qbittorrent.dart';
 import 'package:service_radarr/service_radarr.dart';
 import 'package:service_sabnzbd/service_sabnzbd.dart';
 import 'package:service_sonarr/service_sonarr.dart';
+import 'package:service_glances/service_glances.dart';
 import 'package:service_tautulli/service_tautulli.dart';
 
 /// Routes an instance to its service-specific screen, dispatching on
@@ -86,6 +87,7 @@ class ServiceDetailScreen extends ConsumerWidget {
       ServiceKind.plex => PlexHome(instance: instance),
       ServiceKind.qbittorrent => QbittorrentHome(instance: instance),
       ServiceKind.sabnzbd => SabnzbdHome(instance: instance),
+      ServiceKind.glances => GlancesHome(instance: instance),
     };
   }
 }

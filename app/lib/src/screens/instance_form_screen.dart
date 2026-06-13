@@ -28,6 +28,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
   final TextEditingController _apiKey = TextEditingController();
   final TextEditingController _username = TextEditingController();
   final TextEditingController _password = TextEditingController();
+  final TextEditingController _pollingInterval = TextEditingController(text: '5');
 
   ServiceKind _kind = ServiceKind.sonarr;
   UrlMode _urlMode = UrlMode.auto;
@@ -44,6 +45,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
     _apiKey.dispose();
     _username.dispose();
     _password.dispose();
+    _pollingInterval.dispose();
     super.dispose();
   }
 
@@ -58,6 +60,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
     _kind = instance.kind;
     _urlMode = instance.urlMode;
     _allowSelfSigned = instance.allowSelfSignedCerts;
+    _pollingInterval.text = instance.pollingIntervalSeconds.toString();
     switch (instance.auth) {
       case InstanceAuthApiKey(:final String apiKey):
         _apiKey.text = apiKey;
@@ -85,6 +88,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
           username: _username.text.trim(),
           password: _password.text,
         ),
+      AuthStyle.none => const InstanceAuth.apiKey(apiKey: ''),
     };
   }
 
@@ -110,6 +114,7 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
       urlMode: _urlMode,
       auth: _buildAuth(),
       allowSelfSignedCerts: _allowSelfSigned,
+      pollingIntervalSeconds: int.tryParse(_pollingInterval.text.trim()) ?? 5,
     );
     await controller.upsertInstance(profile.id, instance);
     if (mounted) {
@@ -255,6 +260,28 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
               value: _allowSelfSigned,
               onChanged: (bool v) => setState(() => _allowSelfSigned = v),
             ),
+            if (_kind == ServiceKind.glances) ...<Widget>[
+              const SizedBox(height: Insets.lg),
+              Text(
+                'Polling',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: Insets.sm),
+              TextFormField(
+                controller: _pollingInterval,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Polling Interval (seconds)',
+                  hintText: '5',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (String? v) {
+                  final int? val = int.tryParse(v?.trim() ?? '');
+                  if (val == null || val < 1) return 'Must be at least 1 second';
+                  return null;
+                },
+              ),
+            ],
             const SizedBox(height: Insets.xl),
             FilledButton.icon(
               onPressed: _save,
@@ -321,6 +348,8 @@ class _InstanceFormScreenState extends ConsumerState<InstanceFormScreen> {
                 (v == null || v.isEmpty) ? 'Required' : null,
           ),
         ];
+      case AuthStyle.none:
+        return const <Widget>[];
     }
   }
 

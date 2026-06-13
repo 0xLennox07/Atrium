@@ -37,6 +37,7 @@ dependencies:
   service_radarr:
   service_sabnzbd:
   service_sonarr:
+  service_glances:
   service_tautulli:
 
 dev_dependencies:

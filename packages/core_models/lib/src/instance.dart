@@ -46,6 +46,10 @@ abstract class Instance with _$Instance {
     /// is the user explicitly opting out of cert validation for this
     /// instance only.
     @Default(false) bool allowSelfSignedCerts,
+
+    /// How frequently this instance should be polled by the dashboard/widgets.
+    /// Used by services that need high frequency updates like Glances.
+    @Default(5) int pollingIntervalSeconds,
   }) = _Instance;
 
   factory Instance.fromJson(Map<String, dynamic> json) =>
