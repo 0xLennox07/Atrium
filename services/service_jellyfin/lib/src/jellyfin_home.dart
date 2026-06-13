@@ -379,6 +379,7 @@ class JellyfinPosterCard extends ConsumerWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
+      memCacheWidth: 200,
       placeholder: (BuildContext context, String url) => Container(
         color: theme.colorScheme.surfaceContainerHighest,
       ),
@@ -717,6 +718,7 @@ class _VerticalCard extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
+      memCacheWidth: 200,
       placeholder: (_, __) =>
           Container(color: theme.colorScheme.surfaceContainerHighest),
       errorWidget: (_, __, ___) => fallback,

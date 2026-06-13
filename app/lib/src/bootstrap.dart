@@ -11,10 +11,12 @@ import 'preferences.dart';
 /// root [ProviderScope] needs. Call once from `main()` before `runApp`.
 Future<List<Override>> bootstrap() async {
   await initAtriumHive();
-  final Box<String> settingsBox =
-      await Hive.openBox<String>(AtriumBoxes.settings);
-  final Box<String> profilesBox =
-      await Hive.openBox<String>(AtriumBoxes.profiles);
+  final List<Box<String>> boxes = await Future.wait(<Future<Box<String>>>[
+    Hive.openBox<String>(AtriumBoxes.settings),
+    Hive.openBox<String>(AtriumBoxes.profiles),
+  ]);
+  final Box<String> settingsBox = boxes[0];
+  final Box<String> profilesBox = boxes[1];
 
   final AtriumSecureStorage secrets = AtriumSecureStorage();
   final ProfileRepository repo = ProfileRepository(

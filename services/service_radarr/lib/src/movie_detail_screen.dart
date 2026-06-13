@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'models/radarr_movie.dart';
 import 'radarr_api.dart';
 import 'radarr_providers.dart';
+import 'radarr_release_search_screen.dart';
 
 /// Detail view for one Radarr movie: poster header, status/file info,
 /// ratings, and actions (monitor toggle, search, delete).
@@ -87,6 +88,7 @@ class _Body extends ConsumerWidget {
                       : CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.cover,
+                          memCacheWidth: 200,
                           errorWidget: (_, __, ___) => Container(
                             color: theme.colorScheme.surfaceContainerHighest,
                             child: Icon(
@@ -179,6 +181,21 @@ class _Body extends ConsumerWidget {
                     }
                   },
                 ),
+              ),
+              const SizedBox(width: Insets.sm),
+              IconButton.filledTonal(
+                icon: const Icon(Icons.manage_search),
+                tooltip: 'Manual search',
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RadarrReleaseSearchScreen(
+                        instance: instance,
+                        movie: movie,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

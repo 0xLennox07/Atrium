@@ -774,6 +774,8 @@ class _Poster extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
+      memCacheWidth: 100,
+      memCacheHeight: 150,
       placeholder: (_, __) => Container(color: theme.colorScheme.surfaceContainerHighest),
       errorWidget: (_, __, ___) => fallback,
     );

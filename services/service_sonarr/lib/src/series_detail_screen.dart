@@ -153,6 +153,7 @@ class _Header extends StatelessWidget {
                 : CachedNetworkImage(
                     imageUrl: imageUrl!,
                     fit: BoxFit.cover,
+                    memCacheWidth: 200,
                     errorWidget: (_, __, ___) => Container(
                       color: theme.colorScheme.surfaceContainerHighest,
                       child: Icon(
@@ -308,6 +309,22 @@ class _SeasonTile extends ConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            IconButton(
+              tooltip: 'Manual search',
+              icon: const Icon(Icons.manage_search),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => SonarrReleaseSearchScreen(
+                      instance: instance,
+                      seriesId: series.id,
+                      seasonNumber: season.seasonNumber,
+                      seriesTitle: series.title,
+                    ),
+                  ),
+                );
+              },
+            ),
             IconButton(
               tooltip: 'Search season',
               icon: const Icon(Icons.search),

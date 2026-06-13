@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'models/radarr_add_models.dart';
 import 'models/radarr_movie.dart';
 import 'models/radarr_queue.dart';
+import 'models/radarr_release.dart';
 
 /// Thin typed client over the Radarr v3 REST API.
 ///
@@ -74,6 +75,35 @@ class RadarrApi {
           'name': 'MoviesSearch',
           'movieIds': <int>[movieId],
         },
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<RadarrRelease>> getReleases(int movieId) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/release',
+        queryParameters: <String, dynamic>{'movieId': movieId},
+        options: Options(
+          receiveTimeout: const Duration(seconds: 120),
+          sendTimeout: const Duration(seconds: 120),
+        ),
+      );
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => RadarrRelease(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> grabRelease(RadarrRelease release) async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/release',
+        data: release.raw,
       );
     } on DioException catch (e) {
       throw NetworkException.fromDio(e);

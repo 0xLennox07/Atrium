@@ -4,34 +4,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 
-import 'models/sonarr_episode.dart';
-import 'models/sonarr_release.dart';
-import 'sonarr_api.dart';
-import 'sonarr_providers.dart';
+import 'models/radarr_movie.dart';
+import 'models/radarr_release.dart';
+import 'radarr_api.dart';
+import 'radarr_providers.dart';
 
-class SonarrReleaseSearchScreen extends ConsumerStatefulWidget {
-  const SonarrReleaseSearchScreen({
+class RadarrReleaseSearchScreen extends ConsumerStatefulWidget {
+  const RadarrReleaseSearchScreen({
     required this.instance,
-    this.episode,
-    this.seriesId,
-    this.seasonNumber,
-    this.seriesTitle,
+    required this.movie,
     super.key,
-  }) : assert(episode != null || (seriesId != null && seasonNumber != null && seriesTitle != null));
+  });
 
   final Instance instance;
-  final SonarrEpisode? episode;
-  final int? seriesId;
-  final int? seasonNumber;
-  final String? seriesTitle;
+  final RadarrMovie movie;
 
   @override
-  ConsumerState<SonarrReleaseSearchScreen> createState() =>
-      _SonarrReleaseSearchScreenState();
+  ConsumerState<RadarrReleaseSearchScreen> createState() =>
+      _RadarrReleaseSearchScreenState();
 }
 
-class _SonarrReleaseSearchScreenState
-    extends ConsumerState<SonarrReleaseSearchScreen> {
+class _RadarrReleaseSearchScreenState
+    extends ConsumerState<RadarrReleaseSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedProtocol = 'All'; // 'All', 'Torrent', 'Usenet'
@@ -45,7 +39,7 @@ class _SonarrReleaseSearchScreenState
     super.dispose();
   }
 
-  double _getAgeMinutes(SonarrRelease r) {
+  double _getAgeMinutes(RadarrRelease r) {
     if (r.ageMinutes != null) return r.ageMinutes!;
     if (r.ageHours != null) return r.ageHours! * 60;
     if (r.age != null) return r.age!.toDouble() * 1440;
@@ -65,19 +59,8 @@ class _SonarrReleaseSearchScreenState
 
   @override
   Widget build(BuildContext context) {
-    final String epCode;
-    final AsyncValue<List<SonarrRelease>> releasesValue;
-    final String titleSubtitle;
-
-    if (widget.episode != null) {
-      epCode = 'S${widget.episode!.seasonNumber.toString().padLeft(2, '0')}E${widget.episode!.episodeNumber.toString().padLeft(2, '0')}';
-      releasesValue = ref.watch(sonarrReleasesProvider((widget.instance, widget.episode!.id)));
-      titleSubtitle = widget.episode!.title ?? "Episode ${widget.episode!.episodeNumber}";
-    } else {
-      epCode = 'S${widget.seasonNumber!.toString().padLeft(2, '0')}';
-      releasesValue = ref.watch(sonarrSeasonReleasesProvider((widget.instance, widget.seriesId!, widget.seasonNumber!)));
-      titleSubtitle = widget.seriesTitle!;
-    }
+    final AsyncValue<List<RadarrRelease>> releasesValue =
+        ref.watch(radarrReleasesProvider((widget.instance, widget.movie.id)));
 
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
@@ -89,7 +72,7 @@ class _SonarrReleaseSearchScreenState
           children: <Widget>[
             const Text('Search Releases'),
             Text(
-              '$epCode • $titleSubtitle',
+              widget.movie.title,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colors.onSurfaceVariant,
               ),
@@ -256,20 +239,12 @@ class _SonarrReleaseSearchScreenState
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                if (widget.episode != null) {
-                  ref.invalidate(sonarrReleasesProvider((widget.instance, widget.episode!.id)));
-                } else {
-                  ref.invalidate(sonarrSeasonReleasesProvider((widget.instance, widget.seriesId!, widget.seasonNumber!)));
-                }
+                ref.invalidate(radarrReleasesProvider((widget.instance, widget.movie.id)));
               },
-              child: AsyncValueView<List<SonarrRelease>>(
+              child: AsyncValueView<List<RadarrRelease>>(
                 value: releasesValue,
                 onRetry: () {
-                  if (widget.episode != null) {
-                    ref.invalidate(sonarrReleasesProvider((widget.instance, widget.episode!.id)));
-                  } else {
-                    ref.invalidate(sonarrSeasonReleasesProvider((widget.instance, widget.seriesId!, widget.seasonNumber!)));
-                  }
+                  ref.invalidate(radarrReleasesProvider((widget.instance, widget.movie.id)));
                 },
                 loading: Center(
                   child: Padding(
@@ -297,7 +272,7 @@ class _SonarrReleaseSearchScreenState
                     ),
                   ),
                 ),
-                data: (List<SonarrRelease> list) {
+                data: (List<RadarrRelease> list) {
                   if (list.isEmpty) {
                     return const EmptyView(
                       icon: Icons.search_off,
@@ -308,10 +283,10 @@ class _SonarrReleaseSearchScreenState
                   }
 
                   // Apply search filter locally
-                  Iterable<SonarrRelease> filtered = list;
+                  Iterable<RadarrRelease> filtered = list;
                   if (_searchQuery.isNotEmpty) {
                     final String query = _searchQuery.toLowerCase();
-                    filtered = filtered.where((SonarrRelease r) =>
+                    filtered = filtered.where((RadarrRelease r) =>
                         r.title.toLowerCase().contains(query) ||
                         (r.indexer != null &&
                             r.indexer!.toLowerCase().contains(query)) ||
@@ -322,20 +297,20 @@ class _SonarrReleaseSearchScreenState
                   if (_selectedProtocol != 'All') {
                     final bool wantsTorrent = _selectedProtocol == 'Torrent';
                     filtered = filtered.where(
-                      (SonarrRelease r) => r.isTorrent == wantsTorrent,
+                      (RadarrRelease r) => r.isTorrent == wantsTorrent,
                     );
                   }
 
                   // Apply status filter locally
                   if (_approvedOnly) {
                     filtered =
-                        filtered.where((SonarrRelease r) => r.approved);
+                        filtered.where((RadarrRelease r) => r.approved);
                   }
 
-                  final List<SonarrRelease> sortedList = filtered.toList();
+                  final List<RadarrRelease> sortedList = filtered.toList();
 
                   // Apply sorting locally
-                  sortedList.sort((SonarrRelease a, SonarrRelease b) {
+                  sortedList.sort((RadarrRelease a, RadarrRelease b) {
                     int cmp = 0;
                     switch (_sortBy) {
                       case 'Size':
@@ -395,16 +370,14 @@ class _SonarrReleaseSearchScreenState
                     padding: const EdgeInsets.only(bottom: Insets.lg),
                     itemCount: sortedList.length,
                     itemBuilder: (BuildContext context, int index) {
-                      final SonarrRelease release = sortedList[index];
+                      final RadarrRelease release = sortedList[index];
                       return _ReleaseTile(
                         instance: widget.instance,
+                        movie: widget.movie,
                         release: release,
                         onGrabbed: () {
-                          // Refreshes the episodes list to reflect the downloaded status
-                          final int sId = widget.episode?.seriesId ?? widget.seriesId!;
-                          ref.invalidate(sonarrEpisodesProvider(
-                            (widget.instance, sId),
-                          ));
+                          ref.invalidate(radarrMovieByIdProvider((widget.instance, widget.movie.id)));
+                          ref.invalidate(radarrMoviesProvider(widget.instance));
                           Navigator.pop(context);
                         },
                       );
@@ -423,12 +396,14 @@ class _SonarrReleaseSearchScreenState
 class _ReleaseTile extends ConsumerStatefulWidget {
   const _ReleaseTile({
     required this.instance,
+    required this.movie,
     required this.release,
     required this.onGrabbed,
   });
 
   final Instance instance;
-  final SonarrRelease release;
+  final RadarrMovie movie;
+  final RadarrRelease release;
   final VoidCallback onGrabbed;
 
   @override
@@ -461,8 +436,8 @@ class _ReleaseTileState extends ConsumerState<_ReleaseTile> {
 
     setState(() => _grabbing = true);
     try {
-      final SonarrApi api =
-          await ref.read(sonarrApiProvider(widget.instance).future);
+      final RadarrApi api =
+          await ref.read(radarrApiProvider(widget.instance).future);
       await api.grabRelease(widget.release);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -488,7 +463,7 @@ class _ReleaseTileState extends ConsumerState<_ReleaseTile> {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
-    final SonarrRelease r = widget.release;
+    final RadarrRelease r = widget.release;
 
     final String sizeStr = _fmtSize(r.size);
 

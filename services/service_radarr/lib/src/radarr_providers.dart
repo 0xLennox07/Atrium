@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/radarr_movie.dart';
 import 'models/radarr_queue.dart';
+import 'models/radarr_release.dart';
 import 'radarr_api.dart';
 
 /// How often the download queue refreshes while a Radarr screen is visible.
@@ -91,5 +92,22 @@ final radarrCalendarProvider =
   );
   
   return movies;
+});
+
+/// Fetches releases for a given movie. family key is (Instance, movieId).
+final radarrReleasesProvider =
+    FutureProvider.autoDispose.family<List<RadarrRelease>, (Instance, int)>((
+  Ref ref,
+  (Instance, int) key,
+) async {
+  final (Instance instance, int movieId) = key;
+  try {
+    final RadarrApi api = await ref.watch(radarrApiProvider(instance).future);
+    return await api.getReleases(movieId);
+  } catch (e, stack) {
+    print('Error in radarrReleasesProvider for movie $movieId: $e');
+    print(stack);
+    rethrow;
+  }
 });
 

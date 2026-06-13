@@ -187,6 +187,7 @@ class _ResultCard extends ConsumerWidget {
                       : CachedNetworkImage(
                           imageUrl: result.remotePoster!,
                           fit: BoxFit.cover,
+                          memCacheWidth: 120,
                           errorWidget: (_, __, ___) => Container(
                             color:
                                 theme.colorScheme.surfaceContainerHighest,

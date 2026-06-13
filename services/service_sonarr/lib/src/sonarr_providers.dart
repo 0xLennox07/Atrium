@@ -131,3 +131,20 @@ final sonarrReleasesProvider =
     rethrow;
   }
 });
+
+/// Fetches releases for a given season. family key is (Instance, seriesId, seasonNumber).
+final sonarrSeasonReleasesProvider =
+    FutureProvider.autoDispose.family<List<SonarrRelease>, (Instance, int, int)>((
+  Ref ref,
+  (Instance, int, int) key,
+) async {
+  final (Instance instance, int seriesId, int seasonNumber) = key;
+  try {
+    final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+    return await api.getSeasonReleases(seriesId, seasonNumber);
+  } catch (e, stack) {
+    print('Error in sonarrSeasonReleasesProvider for series $seriesId, season $seasonNumber: $e');
+    print(stack);
+    rethrow;
+  }
+});

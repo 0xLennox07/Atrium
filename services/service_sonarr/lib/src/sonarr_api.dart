@@ -93,6 +93,27 @@ class SonarrApi {
     }
   }
 
+  Future<List<SonarrRelease>> getSeasonReleases(int seriesId, int seasonNumber) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/release',
+        queryParameters: <String, dynamic>{
+          'seriesId': seriesId,
+          'seasonNumber': seasonNumber,
+        },
+        options: Options(
+          receiveTimeout: const Duration(seconds: 120),
+          sendTimeout: const Duration(seconds: 120),
+        ),
+      );
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrRelease(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
   Future<void> grabRelease(SonarrRelease release) async {
     try {
       await _dio.post<dynamic>(
