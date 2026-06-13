@@ -21,6 +21,24 @@ class SonarrRelease {
   bool get downloadAllowed => (raw['downloadAllowed'] as bool?) ?? false;
   bool get approved => (raw['approved'] as bool?) ?? false;
 
+  String get quality => (raw['quality']?['quality']?['name'] as String?) ?? '';
+  String get releaseGroup => (raw['releaseGroup'] as String?) ?? '';
+  int get customFormatScore => ((raw['customFormatScore'] as num?) ?? 0).toInt();
+
+  String? get downloadUrl => raw['downloadUrl'] as String?;
+  String? get guid => raw['guid'] as String?;
+  String? get infoUrl => raw['infoUrl'] as String?;
+  bool get isMagnet => guid?.startsWith('magnet:') ?? false;
+
+  List<String> get languages {
+    final List<dynamic>? list = raw['languages'] as List<dynamic>?;
+    if (list == null) return const [];
+    return list
+        .map((dynamic e) => (e as Map<String, dynamic>)['name'] as String?)
+        .whereType<String>()
+        .toList();
+  }
+
   List<String> get rejections {
     final List<dynamic>? list = raw['rejections'] as List<dynamic>?;
     if (list == null) return const [];
