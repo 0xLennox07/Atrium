@@ -157,12 +157,12 @@ void main() {
     expect(find.text('Breaking Bad'), findsOneWidget);
   });
 
-  testWidgets('PlexHome renders library items', (WidgetTester tester) async {
+  testWidgets('PlexHome renders hub sections', (WidgetTester tester) async {
     final Instance instance = _instance(ServiceKind.plex);
     await _pump(
       tester,
       <Override>[
-        // A throwaway PlexApi so _PosterCard can call imageUrl() without a
+        // A throwaway PlexApi so the poster card can call imageUrl() without a
         // live connection; the test asserts on the title, not the poster.
         plexApiProvider(instance).overrideWith(
           (Ref ref) async => PlexApi(Dio(), token: 'tok'),
@@ -172,21 +172,28 @@ void main() {
             PlexLibrary(key: '1', title: 'Movies', type: 'movie'),
           ],
         ),
-        plexItemsProvider((instance, '1')).overrideWith(
+        // The Home tab is the default view, so it renders the on-deck and
+        // recently-added rows rather than a library grid.
+        plexOnDeckProvider(instance).overrideWith(
           (Ref ref) async => const <PlexMetadata>[
             PlexMetadata(
               ratingKey: '10',
               title: 'Blade Runner',
               year: 1982,
               type: 'movie',
-              viewCount: 1,
+              viewOffset: 600000,
+              duration: 6000000,
             ),
           ],
         ),
+        plexRecentlyAddedProvider(instance).overrideWith(
+          (Ref ref) async => const <PlexMetadata>[],
+        ),
       ],
       PlexHome(instance: instance),
-      pumps: 3,
+      pumps: 4,
     );
+    expect(find.text('Continue Watching'), findsOneWidget);
     expect(find.text('Blade Runner'), findsOneWidget);
     expect(find.text('Movies'), findsOneWidget);
   });

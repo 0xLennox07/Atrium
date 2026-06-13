@@ -38,7 +38,9 @@ class ServiceDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(instance.name),
         actions: <Widget>[
-          if (instance.kind == ServiceKind.emby || instance.kind == ServiceKind.jellyfin)
+          if (instance.kind == ServiceKind.emby ||
+              instance.kind == ServiceKind.jellyfin ||
+              instance.kind == ServiceKind.plex)
             IconButton(
               tooltip: 'Search',
               icon: const Icon(Icons.search),
@@ -49,9 +51,11 @@ class ServiceDetailScreen extends ConsumerWidget {
                   // so it must not ride the branch navigator (GoRouter shell
                   // rebuilds sweep it).
                   useRootNavigator: true,
-                  delegate: instance.kind == ServiceKind.emby
-                    ? EmbySearchDelegate(instance: instance)
-                    : JellyfinSearchDelegate(instance: instance) as SearchDelegate<void>,
+                  delegate: switch (instance.kind) {
+                    ServiceKind.emby => EmbySearchDelegate(instance: instance),
+                    ServiceKind.plex => PlexSearchDelegate(instance: instance),
+                    _ => JellyfinSearchDelegate(instance: instance),
+                  },
                 );
               },
             ),

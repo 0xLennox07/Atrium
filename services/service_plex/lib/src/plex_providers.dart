@@ -48,3 +48,34 @@ final plexChildrenProvider =
       final PlexApi api = await ref.watch(plexApiProvider(instance).future);
       return api.getChildren(ratingKey);
     });
+
+/// Full metadata for one item (detail screen), keyed by (instance, ratingKey).
+final plexItemDetailProvider =
+    FutureProvider.family<PlexMetadata?, (Instance, String)>((
+      Ref ref,
+      (Instance, String) key,
+    ) async {
+      final (Instance instance, String ratingKey) = key;
+      final PlexApi api = await ref.watch(plexApiProvider(instance).future);
+      return api.getMetadata(ratingKey);
+    });
+
+/// "Continue Watching" (on deck) for an instance.
+final plexOnDeckProvider =
+    FutureProvider.family<List<PlexMetadata>, Instance>((
+      Ref ref,
+      Instance instance,
+    ) async {
+      final PlexApi api = await ref.watch(plexApiProvider(instance).future);
+      return api.getOnDeck();
+    });
+
+/// Recently added items for an instance.
+final plexRecentlyAddedProvider =
+    FutureProvider.family<List<PlexMetadata>, Instance>((
+      Ref ref,
+      Instance instance,
+    ) async {
+      final PlexApi api = await ref.watch(plexApiProvider(instance).future);
+      return api.getRecentlyAdded();
+    });

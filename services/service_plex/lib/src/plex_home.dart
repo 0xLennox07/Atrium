@@ -6,14 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/plex_models.dart';
 import 'plex_api.dart';
+import 'plex_item_detail.dart';
 import 'plex_providers.dart';
 
-/// Plex item types that play directly; the rest are containers we drill into.
-const Set<String> _playableTypes = <String>{'movie', 'episode', 'clip'};
+/// Plex item types that open the detail screen; everything else is a container
+/// we drill into. Plex types are reliable and lowercase, so an allowlist is
+/// safe here (unlike Jellyfin/Emby, which use a container denylist).
+const Set<String> plexPlayableTypes = <String>{'movie', 'episode', 'clip'};
 
-/// Plex's per-instance UI: library chips + poster grid. Tapping a movie or
-/// episode resolves its file part and plays it; tapping a show or season
-/// drills into its children.
+/// Plex's per-instance UI: a Home tab (Continue Watching + Recently Added)
+/// plus a chip per library backed by a poster grid. Tapping a movie/episode
+/// opens its detail screen; tapping a show/season drills into its children.
 class PlexHome extends ConsumerStatefulWidget {
   const PlexHome({required this.instance, super.key});
 
@@ -24,7 +27,8 @@ class PlexHome extends ConsumerStatefulWidget {
 }
 
 class _PlexHomeState extends ConsumerState<PlexHome> {
-  String? _selectedKey;
+  /// 'home' selects the hub view; any other value is a library section key.
+  String _selectedKey = 'home';
 
   @override
   Widget build(BuildContext context) {
@@ -35,27 +39,21 @@ class _PlexHomeState extends ConsumerState<PlexHome> {
       value: libraries,
       onRetry: () => ref.invalidate(plexLibrariesProvider(widget.instance)),
       data: (List<PlexLibrary> libs) {
-        if (libs.isEmpty) {
-          return const EmptyView(
-            icon: Icons.play_circle_outline,
-            title: 'No libraries',
-            message: 'This Plex server has no libraries to show.',
-          );
-        }
-        final String selected = _selectedKey ?? libs.first.key;
         return Column(
           children: <Widget>[
             _LibraryChips(
               libraries: libs,
-              selectedKey: selected,
+              selectedKey: _selectedKey,
               onSelect: (String k) => setState(() => _selectedKey = k),
             ),
             Expanded(
-              child: _ItemsGrid(
-                instance: widget.instance,
-                id: selected,
-                isSection: true,
-              ),
+              child: _selectedKey == 'home'
+                  ? _HomeSections(instance: widget.instance)
+                  : _ItemsGrid(
+                      instance: widget.instance,
+                      id: _selectedKey,
+                      isSection: true,
+                    ),
             ),
           ],
         );
@@ -82,10 +80,19 @@ class _LibraryChips extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: Insets.lg),
-        itemCount: libraries.length,
+        itemCount: libraries.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: Insets.sm),
         itemBuilder: (BuildContext context, int index) {
-          final PlexLibrary lib = libraries[index];
+          if (index == 0) {
+            return Center(
+              child: ChoiceChip(
+                label: const Text('Home'),
+                selected: selectedKey == 'home',
+                onSelected: (_) => onSelect('home'),
+              ),
+            );
+          }
+          final PlexLibrary lib = libraries[index - 1];
           return Center(
             child: ChoiceChip(
               label: Text(lib.title),
@@ -146,10 +153,11 @@ class _ItemsGrid extends ConsumerWidget {
             itemCount: list.length,
             itemBuilder: (BuildContext context, int index) {
               final PlexMetadata item = list[index];
-              return _PosterCard(
+              return PlexPosterCard(
+                instance: instance,
                 item: item,
                 imageUrl: api?.imageUrl(item.thumb),
-                onTap: api == null ? null : () => _openItem(context, api, item),
+                onTap: () => openPlexItem(context, instance, item),
               );
             },
           );
@@ -157,24 +165,21 @@ class _ItemsGrid extends ConsumerWidget {
       ),
     );
   }
+}
 
-  void _openItem(
-    BuildContext context,
-    PlexApi api,
-    PlexMetadata item,
-  ) {
-    if (!_playableTypes.contains(item.type)) {
-      // pushScreen = root navigator; branch-navigator pushes get swept by
-      // GoRouter shell rebuilds.
-      pushScreen<void>(
-        context,
-        _FolderScreen(instance: instance, item: item),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Playback is handled by the official app.')),
+/// Opens [item]: a playable type goes to its detail screen, a container drills
+/// into a child grid. Uses the root navigator so GoRouter's shell rebuilds
+/// don't sweep the pushed route.
+void openPlexItem(BuildContext context, Instance instance, PlexMetadata item) {
+  if (plexPlayableTypes.contains(item.type)) {
+    pushScreen<void>(
+      context,
+      PlexItemDetailScreen(instance: instance, ratingKey: item.ratingKey),
+    );
+  } else {
+    pushScreen<void>(
+      context,
+      _FolderScreen(instance: instance, item: item),
     );
   }
 }
@@ -198,29 +203,142 @@ class _FolderScreen extends StatelessWidget {
   }
 }
 
-class _PosterCard extends StatelessWidget {
-  const _PosterCard({
+/// Hub view: Continue Watching (on deck) then Recently Added.
+class _HomeSections extends ConsumerWidget {
+  const _HomeSections({required this.instance});
+
+  final Instance instance;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(plexOnDeckProvider(instance));
+        ref.invalidate(plexRecentlyAddedProvider(instance));
+      },
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: Insets.md),
+        children: <Widget>[
+          _PlexSection(
+            instance: instance,
+            title: 'Continue Watching',
+            provider: plexOnDeckProvider(instance),
+          ),
+          _PlexSection(
+            instance: instance,
+            title: 'Recently Added',
+            provider: plexRecentlyAddedProvider(instance),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One horizontal poster row on the hub view. Renders nothing when empty so a
+/// server with no on-deck items doesn't show a stray header.
+class _PlexSection extends ConsumerWidget {
+  const _PlexSection({
+    required this.instance,
+    required this.title,
+    required this.provider,
+  });
+
+  final Instance instance;
+  final String title;
+  final ProviderListenable<AsyncValue<List<PlexMetadata>>> provider;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<List<PlexMetadata>> items = ref.watch(provider);
+    final PlexApi? api = ref.watch(plexApiProvider(instance)).value;
+
+    return items.maybeWhen(
+      data: (List<PlexMetadata> list) {
+        if (list.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Insets.lg,
+                vertical: Insets.sm,
+              ),
+              child: Text(
+                title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(
+              height: 240,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: Insets.lg),
+                itemCount: list.length,
+                separatorBuilder: (_, __) => const SizedBox(width: Insets.md),
+                itemBuilder: (BuildContext context, int index) {
+                  final PlexMetadata item = list[index];
+                  return SizedBox(
+                    width: 120,
+                    child: PlexPosterCard(
+                      instance: instance,
+                      item: item,
+                      imageUrl: api?.imageUrl(item.thumb),
+                      onTap: () => openPlexItem(context, instance, item),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: Insets.lg),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// A poster tile for a Plex item, with a watched badge, resume-progress bar,
+/// and a long-press menu to toggle watched state.
+class PlexPosterCard extends ConsumerWidget {
+  const PlexPosterCard({
+    required this.instance,
     required this.item,
     required this.imageUrl,
     required this.onTap,
+    super.key,
   });
 
+  final Instance instance;
   final PlexMetadata item;
   final String? imageUrl;
   final VoidCallback? onTap;
 
+  bool get _watched =>
+      item.viewCount > 0 ||
+      (item.leafCount != null &&
+          item.leafCount! > 0 &&
+          item.viewedLeafCount == item.leafCount);
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
-    final bool watched = item.viewCount > 0;
     final double progress = (item.viewOffset != null &&
             item.duration != null &&
             item.duration! > 0)
         ? item.viewOffset! / item.duration!
         : 0;
+    final bool isEpisode = item.grandparentTitle != null;
 
     return InkWell(
       onTap: onTap,
+      onLongPress: () => _showActions(context, ref),
       borderRadius: Radii.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,7 +350,7 @@ class _PosterCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: <Widget>[
                   _poster(theme),
-                  if (watched)
+                  if (_watched)
                     Positioned(
                       top: 4,
                       right: 4,
@@ -249,7 +367,7 @@ class _PosterCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (!watched && progress > 0.02)
+                  if (!_watched && progress > 0.02)
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: LinearProgressIndicator(
@@ -263,12 +381,20 @@ class _PosterCard extends StatelessWidget {
           ),
           const SizedBox(height: Insets.xs),
           Text(
-            item.title,
+            isEpisode ? item.grandparentTitle! : item.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelMedium,
           ),
-          if (item.year != null)
+          if (isEpisode)
+            Text(
+              _episodeLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall
+                  ?.copyWith(color: theme.colorScheme.outline),
+            )
+          else if (item.year != null)
             Text(
               '${item.year}',
               style: theme.textTheme.labelSmall
@@ -277,6 +403,13 @@ class _PosterCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String get _episodeLabel {
+    final String se = (item.parentIndex != null && item.index != null)
+        ? 'S${item.parentIndex}:E${item.index}'
+        : '';
+    return se.isEmpty ? item.title : '$se - ${item.title}';
   }
 
   Widget _poster(ThemeData theme) {
@@ -294,6 +427,44 @@ class _PosterCard extends StatelessWidget {
       placeholder: (BuildContext context, String url) =>
           Container(color: theme.colorScheme.surfaceContainerHighest),
       errorWidget: (BuildContext context, String url, Object error) => fallback,
+    );
+  }
+
+  void _showActions(BuildContext context, WidgetRef ref) {
+    final bool watched = _watched;
+    showModalBottomSheet<void>(
+      context: context,
+      // Root navigator: a branch-navigator sheet gets swept by GoRouter's
+      // shell rebuilds.
+      useRootNavigator: true,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: Icon(watched ? Icons.remove_done : Icons.done_all),
+                title: Text(watched ? 'Mark as unwatched' : 'Mark as watched'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final PlexApi? api =
+                      ref.read(plexApiProvider(instance)).value;
+                  if (api == null) {
+                    return;
+                  }
+                  await api.setWatched(item.ratingKey, watched: !watched);
+                  ref.invalidate(plexItemsProvider);
+                  ref.invalidate(plexOnDeckProvider(instance));
+                  ref.invalidate(plexRecentlyAddedProvider(instance));
+                  ref.invalidate(
+                    plexItemDetailProvider((instance, item.ratingKey)),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
