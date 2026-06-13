@@ -44,10 +44,17 @@ toggles (contributed). Missing:
 2. Now Playing / active sessions tab
 3. Watched/unwatched toggles
 
-### Plex (browse only)
+### Plex (browse + hub + detail + search, live-verified)
 
-Library chips + poster grid + folder drill-down. No detail screen,
-search, or home rows yet.
+Have: library chips, a Home hub (Continue Watching from on-deck +
+Recently Added), poster grid, folder drill-down, item detail (synopsis,
+genres, cast with headshots/roles, ratings, runtime), global search, and a
+watched/unwatched toggle (scrobble) on the detail screen and card
+long-press. Missing:
+
+1. Now Playing / active sessions tab (deliberately skipped - the Tautulli
+   module already shows live Plex sessions)
+2. Show-level detail (a show still drills straight to its seasons grid)
 
 ### Other shallow modules
 
