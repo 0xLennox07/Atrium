@@ -21,6 +21,7 @@ abstract class SonarrSeries with _$SonarrSeries {
     int? year,
     SonarrSeriesStatistics? statistics,
     @Default(<SonarrImage>[]) List<SonarrImage> images,
+    @Default(0) int qualityProfileId,
   }) = _SonarrSeries;
 
   factory SonarrSeries.fromJson(Map<String, dynamic> json) =>

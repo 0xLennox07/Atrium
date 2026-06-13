@@ -17,6 +17,7 @@ abstract class SonarrEpisode with _$SonarrEpisode {
     DateTime? airDateUtc,
     @Default(false) bool hasFile,
     @Default(false) bool monitored,
+    @Default(0) int episodeFileId,
   }) = _SonarrEpisode;
 
   factory SonarrEpisode.fromJson(Map<String, dynamic> json) =>

@@ -2,11 +2,17 @@ import 'package:core_models/core_models.dart';
 import 'package:core_networking/core_networking.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'models/sonarr_add_models.dart';
+import 'models/sonarr_blocklist.dart';
 import 'models/sonarr_calendar.dart';
 import 'models/sonarr_episode.dart';
+import 'models/sonarr_history.dart';
 import 'models/sonarr_queue.dart';
 import 'models/sonarr_release.dart';
 import 'models/sonarr_series.dart';
+import 'models/sonarr_settings_models.dart';
+import 'models/sonarr_system.dart';
+import 'models/sonarr_wanted.dart';
 import 'sonarr_api.dart';
 
 /// How often the download queue refreshes while a Sonarr screen is visible.
@@ -136,3 +142,328 @@ final sonarrSeasonReleasesProvider =
   final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
   return api.getSeasonReleases(seriesId, seasonNumber);
 });
+
+/// Fetches paginated history. family key is (Instance, page).
+final sonarrHistoryProvider =
+    FutureProvider.autoDispose.family<SonarrHistoryPage, (Instance, int)>((
+  Ref ref,
+  (Instance, int) key,
+) async {
+  final (Instance instance, int page) = key;
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getHistory(page: page);
+});
+
+/// Fetches paginated blocklist. family key is (Instance, page).
+final sonarrBlocklistProvider =
+    FutureProvider.autoDispose.family<SonarrBlocklistPage, (Instance, int)>((
+  Ref ref,
+  (Instance, int) key,
+) async {
+  final (Instance instance, int page) = key;
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getBlocklist(page: page);
+});
+
+/// Fetches wanted missing episodes. family key is (Instance, page).
+final sonarrWantedMissingProvider =
+    FutureProvider.autoDispose.family<SonarrWantedPage, (Instance, int)>((
+  Ref ref,
+  (Instance, int) key,
+) async {
+  final (Instance instance, int page) = key;
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getWantedMissing(page: page);
+});
+
+/// Fetches wanted cutoff unmet episodes. family key is (Instance, page).
+final sonarrWantedCutoffProvider =
+    FutureProvider.autoDispose.family<SonarrWantedPage, (Instance, int)>((
+  Ref ref,
+  (Instance, int) key,
+) async {
+  final (Instance instance, int page) = key;
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getWantedCutoff(page: page);
+});
+
+/// Fetches system status.
+final sonarrSystemStatusProvider =
+    FutureProvider.autoDispose.family<SonarrSystemStatus, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getSystemStatus();
+});
+
+/// Fetches disk space.
+final sonarrDiskSpaceProvider =
+    FutureProvider.autoDispose.family<List<SonarrDiskSpace>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getDiskSpace();
+});
+
+/// Fetches scheduled system tasks.
+final sonarrSystemTasksProvider =
+    FutureProvider.autoDispose.family<List<SonarrSystemTask>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getSystemTasks();
+});
+
+/// Fetches active health warning issues.
+final sonarrHealthProvider =
+    FutureProvider.autoDispose.family<List<SonarrHealth>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getHealth();
+});
+
+/// Fetches server backups.
+final sonarrBackupsProvider =
+    FutureProvider.autoDispose.family<List<SonarrBackup>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getBackups();
+});
+
+/// Fetches tags.
+final sonarrTagsProvider =
+    FutureProvider.autoDispose.family<List<SonarrTag>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getTags();
+});
+
+/// Fetches indexers.
+final sonarrIndexersProvider =
+    FutureProvider.autoDispose.family<List<SonarrIndexer>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getIndexers();
+});
+
+/// Fetches download clients.
+final sonarrDownloadClientsProvider =
+    FutureProvider.autoDispose.family<List<SonarrDownloadClient>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getDownloadClients();
+});
+
+/// Fetches notification connections.
+final sonarrNotificationsProvider =
+    FutureProvider.autoDispose.family<List<SonarrNotification>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getNotifications();
+});
+
+/// Fetches import lists.
+final sonarrImportListsProvider =
+    FutureProvider.autoDispose.family<List<SonarrImportList>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getImportLists();
+});
+
+/// Fetches host config settings.
+final sonarrHostConfigProvider =
+    FutureProvider.autoDispose.family<SonarrHostConfig, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getHostConfig();
+});
+
+/// Fetches naming config settings.
+final sonarrNamingConfigProvider =
+    FutureProvider.autoDispose.family<SonarrNamingConfig, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getNamingConfig();
+});
+
+/// Fetches media management config settings.
+final sonarrMediaManagementConfigProvider =
+    FutureProvider.autoDispose.family<SonarrMediaManagementConfig, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getMediaManagementConfig();
+});
+
+/// Fetches UI config settings.
+final sonarrUiConfigProvider =
+    FutureProvider.autoDispose.family<SonarrUiConfig, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getUiConfig();
+});
+
+/// Fetches metadata providers.
+final sonarrMetadataProvidersProvider =
+    FutureProvider.autoDispose.family<List<SonarrMetadataProvider>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getMetadataProviders();
+});
+
+/// Fetches delay profiles.
+final sonarrDelayProfilesProvider =
+    FutureProvider.autoDispose.family<List<SonarrDelayProfile>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getDelayProfiles();
+});
+
+/// Fetches custom formats.
+final sonarrCustomFormatsProvider =
+    FutureProvider.autoDispose.family<List<SonarrCustomFormat>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getCustomFormats();
+});
+
+/// Fetches download client schemas.
+final sonarrDownloadClientSchemaProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getDownloadClientSchema();
+});
+
+/// Fetches indexer schemas.
+final sonarrIndexerSchemaProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getIndexerSchema();
+});
+
+/// Fetches notification schemas.
+final sonarrNotificationSchemaProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getNotificationSchema();
+});
+
+/// Fetches import list schemas.
+final sonarrImportListSchemaProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getImportListSchema();
+});
+
+/// Fetches quality definitions.
+final sonarrQualityDefinitionsProvider =
+    FutureProvider.autoDispose.family<List<SonarrQualityDefinition>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getQualityDefinitions();
+});
+
+/// Fetches release profiles.
+final sonarrReleaseProfilesProvider =
+    FutureProvider.autoDispose.family<List<SonarrReleaseProfile>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getReleaseProfiles();
+});
+
+/// Fetches import list exclusions.
+final sonarrImportListExclusionsProvider =
+    FutureProvider.autoDispose.family<List<SonarrImportListExclusion>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getImportListExclusions();
+});
+
+/// Fetches auto-tagging rules.
+final sonarrAutoTaggingRulesProvider =
+    FutureProvider.autoDispose.family<List<SonarrAutoTaggingRule>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getAutoTaggingRules();
+});
+
+/// Fetches quality profiles.
+final sonarrQualityProfilesProvider =
+    FutureProvider.autoDispose.family<List<SonarrQualityProfile>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getQualityProfiles();
+});
+
+/// Fetches quality profile schema.
+final sonarrQualityProfileSchemaProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getQualityProfileSchema();
+});
+
+/// Fetches raw quality profiles.
+final sonarrQualityProfilesRawProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final SonarrApi api = await ref.watch(sonarrApiProvider(instance).future);
+  return api.getQualityProfilesRaw();
+});
+

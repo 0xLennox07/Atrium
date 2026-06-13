@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'models/sonarr_add_models.dart';
 import 'models/sonarr_episode.dart';
 import 'models/sonarr_series.dart';
 import 'sonarr_api.dart';
@@ -86,7 +87,7 @@ class _Body extends ConsumerWidget {
       child: ListView(
         padding: Insets.page,
         children: <Widget>[
-          _Header(series: series, imageUrl: imageUrl),
+          _Header(instance: instance, series: series, imageUrl: imageUrl),
           const SizedBox(height: Insets.md),
           _ActionsRow(instance: instance, series: series, onChanged: _refresh),
           if (series.overview != null && series.overview!.isNotEmpty) ...<
@@ -123,16 +124,29 @@ class _Body extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.series, required this.imageUrl});
+class _Header extends ConsumerWidget {
+  const _Header({
+    required this.instance,
+    required this.series,
+    required this.imageUrl,
+  });
 
+  final Instance instance;
   final SonarrSeries series;
   final String? imageUrl;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
     final SonarrSeriesStatistics? st = series.statistics;
+
+    final AsyncValue<List<SonarrQualityProfile>> profilesVal =
+        ref.watch(sonarrQualityProfilesProvider(instance));
+    final String profileName = profilesVal.maybeWhen(
+      data: (List<SonarrQualityProfile> profiles) =>
+          profiles.firstWhereOrNull((SonarrQualityProfile p) => p.id == series.qualityProfileId)?.name ?? 'Unknown',
+      orElse: () => '...',
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,6 +191,7 @@ class _Header extends StatelessWidget {
                   if (series.network != null && series.network!.isNotEmpty)
                     series.network!,
                   if (series.status != null) series.status!,
+                  'Profile: $profileName',
                 ].join(' • '),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.outline),
@@ -539,6 +554,50 @@ class _EpisodeTile extends ConsumerWidget {
               }
             },
           ),
+          // Delete file button
+          if (episode.hasFile && episode.episodeFileId > 0)
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error, size: 20),
+              tooltip: 'Delete episode file',
+              onPressed: () async {
+                final bool? confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete episode file?'),
+                    content: Text(
+                      'Are you sure you want to delete the file for:\n'
+                      '${episode.title ?? "Episode ${episode.episodeNumber}"}?',
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.error,
+                          foregroundColor: theme.colorScheme.onError,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  final SonarrApi api = await ref.read(sonarrApiProvider(instance).future);
+                  await api.deleteEpisodeFile(episode.episodeFileId);
+                  ref.invalidate(sonarrEpisodesProvider((instance, seriesId)));
+                  ref.invalidate(sonarrSeriesByIdProvider((instance, seriesId)));
+                  ref.invalidate(sonarrSeriesProvider(instance));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Episode file deleted')),
+                    );
+                  }
+                }
+              },
+            ),
         ],
       ),
     );
@@ -557,9 +616,29 @@ class _SeriesMenu extends ConsumerWidget {
       onSelected: (String v) async {
         if (v == 'delete') {
           await _confirmDelete(context, ref);
+        } else if (v == 'rename') {
+          _showRenameDialog(context, ref);
+        } else if (v == 'profile') {
+          _showChangeProfileDialog(context, ref);
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
+          value: 'profile',
+          child: ListTile(
+            leading: Icon(Icons.settings_outlined),
+            title: Text('Change quality profile'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'rename',
+          child: ListTile(
+            leading: Icon(Icons.drive_file_rename_outline),
+            title: Text('Rename files'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
         const PopupMenuItem<String>(
           value: 'delete',
           child: ListTile(
@@ -569,6 +648,91 @@ class _SeriesMenu extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showChangeProfileDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change Quality Profile'),
+          content: Consumer(
+            builder: (BuildContext context, WidgetRef ref, Widget? child) {
+              final AsyncValue<List<SonarrQualityProfile>> profilesVal =
+                  ref.watch(sonarrQualityProfilesProvider(instance));
+              return profilesVal.when(
+                loading: () => const SizedBox(
+                  height: 100,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (Object err, StackTrace? stack) => Text('Error: $err'),
+                data: (List<SonarrQualityProfile> profiles) {
+                  if (profiles.isEmpty) {
+                    return const Text('No profiles available.');
+                  }
+                  return SizedBox(
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: profiles.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final SonarrQualityProfile p = profiles[index];
+                        final bool isSelected = p.id == series.qualityProfileId;
+                        return ListTile(
+                          title: Text(p.name),
+                          trailing: isSelected
+                              ? const Icon(Icons.check, color: Colors.green)
+                              : null,
+                          selected: isSelected,
+                          onTap: () async {
+                            final SonarrApi api =
+                                await ref.read(sonarrApiProvider(instance).future);
+                            final Map<String, dynamic> raw =
+                                await api.getSeriesRaw(series.id);
+                            raw['qualityProfileId'] = p.id;
+                            await api.updateSeriesRaw(raw);
+                            ref.invalidate(
+                              sonarrSeriesByIdProvider((instance, series.id)),
+                            );
+                            ref.invalidate(sonarrSeriesProvider(instance));
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Quality profile changed to ${p.name}',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRenameDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return _RenameDialog(instance: instance, series: series);
+      },
     );
   }
 
@@ -614,6 +778,215 @@ class _SeriesMenu extends ConsumerWidget {
         Navigator.of(context).pop();
       }
     }
+  }
+}
+
+class _RenameDialog extends ConsumerStatefulWidget {
+  const _RenameDialog({required this.instance, required this.series});
+
+  final Instance instance;
+  final SonarrSeries series;
+
+  @override
+  ConsumerState<_RenameDialog> createState() => _RenameDialogState();
+}
+
+class _RenameDialogState extends ConsumerState<_RenameDialog> {
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _previews = [];
+  final Set<int> _selectedFileIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPreviews();
+  }
+
+  Future<void> _fetchPreviews() async {
+    try {
+      final SonarrApi api = await ref.read(sonarrApiProvider(widget.instance).future);
+      final List<Map<String, dynamic>> list = await api.getRenamePreviews(widget.series.id);
+      if (mounted) {
+        setState(() {
+          _previews = list;
+          _selectedFileIds.clear();
+          _selectedFileIds.addAll(
+            list.map((Map<String, dynamic> e) => e['episodeFileId'] as int),
+          );
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  String _getFilename(String path) {
+    return path.split(RegExp(r'[/\\]')).last;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    Widget content;
+    if (_loading) {
+      content = const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    } else if (_error != null) {
+      content = Padding(
+        padding: const EdgeInsets.all(Insets.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
+            const SizedBox(height: Insets.sm),
+            Text(
+              'Error loading rename previews',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: Insets.xs),
+            Text(_error!, style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
+          ],
+        ),
+      );
+    } else if (_previews.isEmpty) {
+      content = const Padding(
+        padding: EdgeInsets.all(Insets.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
+            SizedBox(height: Insets.sm),
+            Text(
+              'All files are properly named',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    } else {
+      content = SizedBox(
+        width: double.maxFinite,
+        height: 400,
+        child: Column(
+          children: <Widget>[
+            CheckboxListTile(
+              title: const Text('Select All', style: TextStyle(fontWeight: FontWeight.bold)),
+              value: _selectedFileIds.length == _previews.length,
+              onChanged: (bool? checked) {
+                setState(() {
+                  if (checked == true) {
+                    _selectedFileIds.addAll(
+                      _previews.map((Map<String, dynamic> e) => e['episodeFileId'] as int),
+                    );
+                  } else {
+                    _selectedFileIds.clear();
+                  }
+                });
+              },
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.separated(
+                itemCount: _previews.length,
+                separatorBuilder: (BuildContext context, int index) => const Divider(height: 1),
+                itemBuilder: (BuildContext context, int index) {
+                  final Map<String, dynamic> preview = _previews[index];
+                  final int fileId = preview['episodeFileId'] as int;
+                  final bool isSelected = _selectedFileIds.contains(fileId);
+                  
+                  final int season = preview['seasonNumber'] as int;
+                  final List<dynamic> epNums = preview['episodeNumbers'] as List<dynamic>;
+                  final String epLabel = 'S${season.toString().padLeft(2, '0')}E${epNums.map((dynamic e) => e.toString().padLeft(2, '0')).join('-')}';
+
+                  final String existingName = _getFilename(preview['existingPath'] as String);
+                  final String newName = _getFilename(preview['newPath'] as String);
+
+                  return CheckboxListTile(
+                    value: isSelected,
+                    onChanged: (bool? checked) {
+                      setState(() {
+                        if (checked == true) {
+                          _selectedFileIds.add(fileId);
+                        } else {
+                          _selectedFileIds.remove(fileId);
+                        }
+                      });
+                    },
+                    title: Text(
+                      epLabel,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const SizedBox(height: 4),
+                        Text(
+                          'From: $existingName',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'To: $newName',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AlertDialog(
+      title: const Text('Rename Files'),
+      content: content,
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        if (!_loading && _error == null && _previews.isNotEmpty)
+          FilledButton(
+            onPressed: _selectedFileIds.isEmpty
+                ? null
+                : () async {
+                    final SonarrApi api = await ref.read(sonarrApiProvider(widget.instance).future);
+                    await api.executeRename(widget.series.id, _selectedFileIds.toList());
+                    ref.invalidate(sonarrEpisodesProvider((widget.instance, widget.series.id)));
+                    ref.invalidate(sonarrSeriesByIdProvider((widget.instance, widget.series.id)));
+                    ref.invalidate(sonarrSeriesProvider(widget.instance));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Rename started for ${_selectedFileIds.length} files'),
+                        ),
+                      );
+                      Navigator.of(context).pop();
+                    }
+                  },
+            child: Text('Rename (${_selectedFileIds.length})'),
+          ),
+      ],
+    );
   }
 }
 

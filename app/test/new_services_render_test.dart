@@ -259,4 +259,277 @@ void main() {
     expect(find.text('Inception'), findsOneWidget);
     expect(find.text('Missing'), findsNWidgets(2));
   });
+
+  testWidgets('SonarrHome renders all tabs and models', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final Instance instance = _instance(ServiceKind.sonarr);
+    
+    await _pump(
+      tester,
+      <Override>[
+        sonarrApiProvider(instance).overrideWith(
+          (Ref ref) async => SonarrApi(Dio(), apiKey: 'k'),
+        ),
+        sonarrSeriesProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrSeries>[
+            const SonarrSeries(
+              id: 1,
+              title: 'Breaking Bad',
+              monitored: true,
+            ),
+          ],
+        ),
+        sonarrQueueProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrQueuePage(
+            page: 1,
+            pageSize: 50,
+            totalRecords: 0,
+            records: <SonarrQueueRecord>[],
+          ),
+        ),
+        sonarrWantedMissingProvider((instance, 1)).overrideWith(
+          (Ref ref) async => const SonarrWantedPage(
+            page: 1,
+            pageSize: 50,
+            totalRecords: 1,
+            records: <SonarrWantedRecord>[
+              SonarrWantedRecord(
+                id: 1,
+                seriesId: 1,
+                seasonNumber: 1,
+                episodeNumber: 2,
+                title: 'Cat\'s in the Bag...',
+                airDate: '2008-01-27',
+                monitored: true,
+                hasFile: false,
+                series: SonarrSeries(
+                  id: 1,
+                  title: 'Breaking Bad',
+                ),
+              ),
+            ],
+          ),
+        ),
+        sonarrWantedCutoffProvider((instance, 1)).overrideWith(
+          (Ref ref) async => const SonarrWantedPage(
+            page: 1,
+            pageSize: 50,
+            totalRecords: 0,
+            records: <SonarrWantedRecord>[],
+          ),
+        ),
+        sonarrHistoryProvider((instance, 1)).overrideWith(
+          (Ref ref) async => SonarrHistoryPage(
+            page: 1,
+            pageSize: 50,
+            totalRecords: 1,
+            records: <SonarrHistoryRecord>[
+              SonarrHistoryRecord(
+                id: 1,
+                seriesId: 1,
+                episodeId: 1,
+                sourceTitle: 'Breaking.Bad.S01E01.Pilot.1080p.WEBDL',
+                eventType: 'grabbed',
+                date: DateTime(2026, 6, 12),
+              ),
+            ],
+          ),
+        ),
+        sonarrBlocklistProvider((instance, 1)).overrideWith(
+          (Ref ref) async => const SonarrBlocklistPage(
+            page: 1,
+            pageSize: 50,
+            totalRecords: 0,
+            records: <SonarrBlocklistRecord>[],
+          ),
+        ),
+        sonarrSystemStatusProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrSystemStatus(
+            version: '4.0.17',
+            appName: 'Sonarr',
+            osName: 'Alpine',
+            osVersion: '3.23.4',
+            isDocker: true,
+            isLinux: true,
+            isWindows: false,
+            isOsx: false,
+          ),
+        ),
+        sonarrDiskSpaceProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrDiskSpace>[
+            const SonarrDiskSpace(
+              path: '/data',
+              label: 'Data',
+              freeSpace: 5000000000,
+              totalSpace: 10000000000,
+            ),
+          ],
+        ),
+        sonarrSystemTasksProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrSystemTask>[
+            const SonarrSystemTask(
+              id: 1,
+              name: 'Rss Sync',
+              taskName: 'RssSync',
+              interval: 15,
+            ),
+          ],
+        ),
+        sonarrIndexersProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrIndexer>[],
+        ),
+        sonarrDownloadClientsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrDownloadClient>[],
+        ),
+        sonarrNotificationsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrNotification>[],
+        ),
+        sonarrImportListsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrImportList>[],
+        ),
+        sonarrTagsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrTag>[],
+        ),
+        sonarrHostConfigProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrHostConfig(<String, dynamic>{
+            'id': 1,
+            'port': 8989,
+            'enableSsl': false,
+            'logLevel': 'info',
+            'branch': 'main',
+            'backupInterval': 7,
+            'backupRetention': 28,
+          }),
+        ),
+        sonarrNamingConfigProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrNamingConfig(<String, dynamic>{
+            'id': 1,
+            'renameEpisodes': true,
+            'standardEpisodeFormat': '{Series Title} - S{season:00}E{episode:00} - {Episode Title}',
+            'dailyEpisodeFormat': '',
+            'animeEpisodeFormat': '',
+            'seriesFolderFormat': '',
+          }),
+        ),
+        sonarrMediaManagementConfigProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrMediaManagementConfig(<String, dynamic>{
+            'id': 1,
+            'autoUnmonitorPreviouslyDownloadedEpisodes': false,
+            'downloadPropersAndRepacks': 'preferAndUpgrade',
+            'createEmptySeriesFolders': false,
+            'deleteEmptyFolders': false,
+            'copyUsingHardlinks': true,
+          }),
+        ),
+        sonarrUiConfigProvider(instance).overrideWith(
+          (Ref ref) async => const SonarrUiConfig(<String, dynamic>{
+            'id': 1,
+            'theme': 'dark',
+            'timeFormat': '12h',
+          }),
+        ),
+        sonarrMetadataProvidersProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrMetadataProvider>[
+            const SonarrMetadataProvider(<String, dynamic>{
+              'id': 1,
+              'name': 'Kodi',
+              'enable': false,
+            }),
+          ],
+        ),
+        sonarrDelayProfilesProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrDelayProfile>[
+            const SonarrDelayProfile(<String, dynamic>{
+              'id': 1,
+              'enableTorrent': true,
+              'enableUsenet': true,
+              'preferredProtocol': 'usenet',
+            }),
+          ],
+        ),
+        sonarrCustomFormatsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrCustomFormat>[
+            const SonarrCustomFormat(<String, dynamic>{
+              'id': 1,
+              'name': 'HD-1080p',
+            }),
+          ],
+        ),
+        sonarrQualityDefinitionsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrQualityDefinition>[
+            const SonarrQualityDefinition(<String, dynamic>{
+              'id': 1,
+              'name': 'HDTV-720p',
+              'minSize': 0.0,
+              'maxSize': 100.0,
+              'preferredSize': 50.0,
+            }),
+          ],
+        ),
+        sonarrReleaseProfilesProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrReleaseProfile>[
+            const SonarrReleaseProfile(<String, dynamic>{
+              'id': 1,
+              'name': 'Test Profile',
+              'enabled': true,
+              'required': <String>[],
+              'ignored': <String>[],
+              'preferred': <Map<String, dynamic>>[],
+              'tags': <int>[],
+            }),
+          ],
+        ),
+        sonarrImportListExclusionsProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrImportListExclusion>[
+            const SonarrImportListExclusion(<String, dynamic>{
+              'id': 1,
+              'title': 'Excluded Series',
+              'tvdbId': 12345,
+            }),
+          ],
+        ),
+        sonarrAutoTaggingRulesProvider(instance).overrideWith(
+          (Ref ref) async => <SonarrAutoTaggingRule>[
+            const SonarrAutoTaggingRule(<String, dynamic>{
+              'id': 1,
+              'name': 'Test Rule',
+              'tags': <int>[],
+              'specifications': <Map<String, dynamic>>[],
+            }),
+          ],
+        ),
+      ],
+      SonarrHome(instance: instance),
+      pumps: 3,
+    );
+
+    // Verify default view (Series Tab) renders correctly
+    expect(find.text('Breaking Bad'), findsOneWidget);
+
+    // Verify all tabs are present in TabBar
+    expect(find.text('Series'), findsOneWidget);
+    expect(find.text('Queue'), findsOneWidget);
+    expect(find.text('Wanted'), findsOneWidget);
+    expect(find.text('History'), findsOneWidget);
+    expect(find.text('Blocklist'), findsOneWidget);
+    expect(find.text('System'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+
+    // Switch to Settings tab
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    // Verify new settings panels are rendered
+    expect(find.text('General / Host Settings'), findsOneWidget);
+    expect(find.text('Episode Naming'), findsOneWidget);
+    expect(find.text('Media Management'), findsOneWidget);
+    expect(find.text('UI Configuration'), findsOneWidget);
+    expect(find.text('Metadata Consumers'), findsOneWidget);
+    expect(find.text('Delay Profiles'), findsOneWidget);
+    expect(find.text('Custom Formats'), findsOneWidget);
+  });
 }
