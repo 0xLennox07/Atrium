@@ -85,3 +85,7 @@ look*.png
 shot*.png
 *.ui.xml
 ui.xml
+v3.json
+v3.yaml
+v3pending.yaml
+v3implemented.yaml

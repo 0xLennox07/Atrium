@@ -2,11 +2,16 @@ import 'package:core_networking/core_networking.dart';
 import 'package:dio/dio.dart';
 
 import 'models/sonarr_add_models.dart';
+import 'models/sonarr_blocklist.dart';
 import 'models/sonarr_calendar.dart';
 import 'models/sonarr_episode.dart';
+import 'models/sonarr_history.dart';
 import 'models/sonarr_queue.dart';
 import 'models/sonarr_release.dart';
 import 'models/sonarr_series.dart';
+import 'models/sonarr_settings_models.dart';
+import 'models/sonarr_system.dart';
+import 'models/sonarr_wanted.dart';
 
 /// Thin typed client over the Sonarr v3 REST API.
 ///
@@ -256,7 +261,6 @@ class SonarrApi {
     }
   }
 
-  /// Quality profiles configured on the server.
   Future<List<SonarrQualityProfile>> getQualityProfiles() async {
     try {
       final Response<dynamic> resp =
@@ -267,6 +271,15 @@ class SonarrApi {
                 SonarrQualityProfile.fromJson(e as Map<String, dynamic>),
           )
           .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getQualityProfilesRaw() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/qualityprofile');
+      return (resp.data as List<dynamic>).map((dynamic e) => e as Map<String, dynamic>).toList();
     } on DioException catch (e) {
       throw NetworkException.fromDio(e);
     }
@@ -387,6 +400,745 @@ class SonarrApi {
     }
     return null;
   }
+
+  Future<SonarrHistoryPage> getHistory({
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/history',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'pageSize': pageSize,
+          'sortKey': 'date',
+          'sortDirection': 'descending',
+        },
+      );
+      return SonarrHistoryPage.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrBlocklistPage> getBlocklist({
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/blocklist',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'pageSize': pageSize,
+          'sortKey': 'date',
+          'sortDirection': 'descending',
+        },
+      );
+      return SonarrBlocklistPage.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteBlocklist(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/blocklist/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrWantedPage> getWantedMissing({
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/wanted/missing',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'pageSize': pageSize,
+          'includeSeries': true,
+        },
+      );
+      return SonarrWantedPage.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrWantedPage> getWantedCutoff({
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/wanted/cutoff',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'pageSize': pageSize,
+          'includeSeries': true,
+        },
+      );
+      return SonarrWantedPage.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> triggerMissingSearch() async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/command',
+        data: <String, dynamic>{
+          'name': 'MissingEpisodeSearch',
+        },
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> triggerCutoffUnmetSearch() async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/command',
+        data: <String, dynamic>{
+          'name': 'CutoffUnmetEpisodeSearch',
+        },
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrSystemStatus> getSystemStatus() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/system/status');
+      return SonarrSystemStatus.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrDiskSpace>> getDiskSpace() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/diskspace');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrDiskSpace.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrSystemTask>> getSystemTasks() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/system/task');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrSystemTask.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> runSystemTask(String taskName) async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/command',
+        data: <String, dynamic>{
+          'name': taskName,
+        },
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrHealth>> getHealth() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/health');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrHealth.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrBackup>> getBackups() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/system/backup');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrBackup.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteBackup(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/system/backup/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrTag>> getTags() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/tag');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrTag.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createTag(String label) async {
+    try {
+      await _dio.post<dynamic>('$_base/tag', data: <String, dynamic>{'label': label});
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteTag(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/tag/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrIndexer>> getIndexers() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/indexer');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrIndexer(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateIndexerRaw(Map<String, dynamic> indexerJson) async {
+    try {
+      await _dio.put<dynamic>('$_base/indexer/${indexerJson['id']}', data: indexerJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> testIndexerRaw(Map<String, dynamic> indexerJson) async {
+    try {
+      await _dio.post<dynamic>('$_base/indexer/test', data: indexerJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteIndexer(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/indexer/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrDownloadClient>> getDownloadClients() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/downloadclient');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrDownloadClient(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateDownloadClientRaw(Map<String, dynamic> clientJson) async {
+    try {
+      await _dio.put<dynamic>('$_base/downloadclient/${clientJson['id']}', data: clientJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> testDownloadClientRaw(Map<String, dynamic> clientJson) async {
+    try {
+      await _dio.post<dynamic>('$_base/downloadclient/test', data: clientJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteDownloadClient(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/downloadclient/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrNotification>> getNotifications() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/notification');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrNotification(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateNotificationRaw(Map<String, dynamic> notificationJson) async {
+    try {
+      await _dio.put<dynamic>('$_base/notification/${notificationJson['id']}', data: notificationJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> testNotificationRaw(Map<String, dynamic> notificationJson) async {
+    try {
+      await _dio.post<dynamic>('$_base/notification/test', data: notificationJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteNotification(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/notification/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrImportList>> getImportLists() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/importlist');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrImportList(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateImportListRaw(Map<String, dynamic> listJson) async {
+    try {
+      await _dio.put<dynamic>('$_base/importlist/${listJson['id']}', data: listJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> testImportListRaw(Map<String, dynamic> listJson) async {
+    try {
+      await _dio.post<dynamic>('$_base/importlist/test', data: listJson);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteImportList(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/importlist/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrHostConfig> getHostConfig() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/config/host');
+      return SonarrHostConfig(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateHostConfigRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/config/host/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrNamingConfig> getNamingConfig() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/config/naming');
+      return SonarrNamingConfig(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateNamingConfigRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/config/naming/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrMediaManagementConfig> getMediaManagementConfig() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/config/mediamanagement');
+      return SonarrMediaManagementConfig(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateMediaManagementConfigRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/config/mediamanagement/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<SonarrUiConfig> getUiConfig() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/config/ui');
+      return SonarrUiConfig(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateUiConfigRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/config/ui/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrMetadataProvider>> getMetadataProviders() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/metadata');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrMetadataProvider(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateMetadataProviderRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/metadata/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> testMetadataProviderRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/metadata/test', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrDelayProfile>> getDelayProfiles() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/delayprofile');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrDelayProfile(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateDelayProfileRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/delayprofile/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrCustomFormat>> getCustomFormats() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/customformat');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrCustomFormat(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteCustomFormat(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/customformat/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getDownloadClientSchema() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/downloadclient/schema');
+      return (resp.data as List<dynamic>).map((dynamic e) => e as Map<String, dynamic>).toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createDownloadClientRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/downloadclient', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getIndexerSchema() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/indexer/schema');
+      return (resp.data as List<dynamic>).map((dynamic e) => e as Map<String, dynamic>).toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createIndexerRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/indexer', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationSchema() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/notification/schema');
+      return (resp.data as List<dynamic>).map((dynamic e) => e as Map<String, dynamic>).toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createNotificationRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/notification', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getImportListSchema() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/importlist/schema');
+      return (resp.data as List<dynamic>).map((dynamic e) => e as Map<String, dynamic>).toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createImportListRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/importlist', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrQualityDefinition>> getQualityDefinitions() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/qualitydefinition');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrQualityDefinition(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateQualityDefinitionRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/qualitydefinition/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrReleaseProfile>> getReleaseProfiles() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/releaseprofile');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrReleaseProfile(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createReleaseProfileRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/releaseprofile', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateReleaseProfileRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/releaseprofile/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteReleaseProfile(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/releaseprofile/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteEpisodeFile(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/episodefile/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getRenamePreviews(int seriesId) async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>(
+        '$_base/rename',
+        queryParameters: <String, dynamic>{'seriesId': seriesId},
+      );
+      return (resp.data as List<dynamic>).map((dynamic e) => e as Map<String, dynamic>).toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> executeRename(int seriesId, List<int> filesIds) async {
+    try {
+      await _dio.post<dynamic>(
+        '$_base/command',
+        data: <String, dynamic>{
+          'name': 'RenameFiles',
+          'seriesId': seriesId,
+          'files': filesIds,
+        },
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrImportListExclusion>> getImportListExclusions() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/importlistexclusion');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrImportListExclusion(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createImportListExclusionRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/importlistexclusion', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteImportListExclusion(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/importlistexclusion/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<List<SonarrAutoTaggingRule>> getAutoTaggingRules() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/autotagging');
+      return (resp.data as List<dynamic>)
+          .map((dynamic e) => SonarrAutoTaggingRule(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createAutoTaggingRuleRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/autotagging', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateAutoTaggingRuleRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/autotagging/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteAutoTaggingRule(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/autotagging/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getQualityProfileSchema() async {
+    try {
+      final Response<dynamic> resp = await _dio.get<dynamic>('$_base/qualityprofile/schema');
+      return resp.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> createQualityProfileRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.post<dynamic>('$_base/qualityprofile', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> updateQualityProfileRaw(Map<String, dynamic> raw) async {
+    try {
+      await _dio.put<dynamic>('$_base/qualityprofile/${raw['id']}', data: raw);
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
+  Future<void> deleteQualityProfile(int id) async {
+    try {
+      await _dio.delete<dynamic>('$_base/qualityprofile/$id');
+    } on DioException catch (e) {
+      throw NetworkException.fromDio(e);
+    }
+  }
+
 
   Future<List<T>> _list<T>(
     String path,
