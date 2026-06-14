@@ -122,6 +122,14 @@ abstract class TautulliSession with _$TautulliSession {
     @JsonKey(name: 'media_type', fromJson: tString)
     @Default('')
     String mediaType,
+    @JsonKey(fromJson: tString) @Default('') String thumb,
+    @JsonKey(name: 'grandparent_thumb', fromJson: tString)
+    @Default('')
+    String grandparentThumb,
+    @JsonKey(fromJson: tString) @Default('') String art,
+    @JsonKey(name: 'user_thumb', fromJson: tString)
+    @Default('')
+    String userThumb,
   }) = _TautulliSession;
 
   const TautulliSession._();
@@ -138,4 +146,8 @@ abstract class TautulliSession with _$TautulliSession {
     }
     return 'S$seasonNumber E$episodeNumber';
   }
+
+  /// Best poster path: the show poster for episodes, else the item's thumb.
+  String get posterThumb =>
+      grandparentThumb.isNotEmpty ? grandparentThumb : thumb;
 }

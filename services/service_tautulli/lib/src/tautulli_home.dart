@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_networking/core_networking.dart';
 import 'package:core_ui/core_ui.dart';
@@ -11,7 +14,7 @@ import 'tautulli_api.dart';
 import 'tautulli_providers.dart';
 
 /// Tautulli's per-instance UI: Activity (live streams w/ detail + terminate),
-/// History, Stats, and Users tabs.
+/// History, Stats, and Users tabs - all poster-rich via Tautulli's image proxy.
 class TautulliHome extends StatelessWidget {
   const TautulliHome({required this.instance, super.key});
 
@@ -27,10 +30,10 @@ class TautulliHome extends StatelessWidget {
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: <Widget>[
-              Tab(text: 'Activity'),
-              Tab(text: 'History'),
-              Tab(text: 'Stats'),
-              Tab(text: 'Users'),
+              Tab(icon: Icon(Icons.play_circle_outline), text: 'Activity'),
+              Tab(icon: Icon(Icons.history), text: 'History'),
+              Tab(icon: Icon(Icons.bar_chart_outlined), text: 'Stats'),
+              Tab(icon: Icon(Icons.people_alt_outlined), text: 'Users'),
             ],
           ),
           Expanded(
@@ -61,6 +64,7 @@ class _ActivityTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<TautulliActivity> activity =
         ref.watch(tautulliActivityProvider(instance));
+    final TautulliApi? api = ref.watch(tautulliApiProvider(instance)).valueOrNull;
 
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(tautulliActivityProvider(instance)),
@@ -80,25 +84,13 @@ class _ActivityTab extends ConsumerWidget {
             itemCount: a.sessions.length + 1,
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: Insets.sm),
-                  child: Text(
-                    <String>[
-                      '${a.streamCount} '
-                          'stream${a.streamCount == 1 ? '' : 's'}',
-                      fmtTautulliKbps(a.totalBandwidth),
-                      if (a.transcodeCount > 0)
-                        '${a.transcodeCount} transcoding',
-                    ].join(' • '),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                  ),
-                );
+                return _ActivitySummary(activity: a);
               }
               final TautulliSession s = a.sessions[index - 1];
               return _SessionCard(
                 session: s,
+                posterUrl: api?.imageUrl(s.posterThumb),
+                avatarUrl: api?.imageUrl(s.userThumb, fallback: 'art'),
                 onTap: () => _showSession(context, s),
               );
             },
@@ -121,10 +113,77 @@ class _ActivityTab extends ConsumerWidget {
   }
 }
 
+class _ActivitySummary extends StatelessWidget {
+  const _ActivitySummary({required this.activity});
+
+  final TautulliActivity activity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Insets.md),
+      child: Wrap(
+        spacing: Insets.sm,
+        runSpacing: Insets.xs,
+        children: <Widget>[
+          _MetricChip(
+            icon: Icons.sensors,
+            label: '${activity.streamCount} '
+                'stream${activity.streamCount == 1 ? '' : 's'}',
+          ),
+          _MetricChip(
+            icon: Icons.speed,
+            label: fmtTautulliKbps(activity.totalBandwidth),
+          ),
+          if (activity.transcodeCount > 0)
+            _MetricChip(
+              icon: Icons.transform,
+              label: '${activity.transcodeCount} transcoding',
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricChip extends StatelessWidget {
+  const _MetricChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 14, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(label, style: theme.textTheme.labelMedium),
+        ],
+      ),
+    );
+  }
+}
+
 class _SessionCard extends StatelessWidget {
-  const _SessionCard({required this.session, required this.onTap});
+  const _SessionCard({
+    required this.session,
+    required this.posterUrl,
+    required this.avatarUrl,
+    required this.onTap,
+  });
 
   final TautulliSession session;
+  final String? posterUrl;
+  final String? avatarUrl;
   final VoidCallback onTap;
 
   @override
@@ -132,6 +191,12 @@ class _SessionCard extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final double pct = session.progressPercent / 100.0;
     final bool playing = session.state.toLowerCase() == 'playing';
+    final String meta = <String>[
+      session.friendlyName,
+      if (session.player.isNotEmpty) session.player,
+      if (session.qualityProfile.isNotEmpty) session.qualityProfile,
+      if (session.bandwidth > 0) fmtTautulliKbps(session.bandwidth),
+    ].join(' • ');
 
     return Card(
       margin: const EdgeInsets.only(bottom: Insets.sm),
@@ -139,49 +204,76 @@ class _SessionCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: Radii.card,
         child: Padding(
-          padding: Insets.page,
-          child: Column(
+          padding: const EdgeInsets.all(Insets.md),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Icon(
-                    playing ? Icons.play_arrow : Icons.pause,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: Insets.xs),
-                  Expanded(
-                    child: Text(
-                      <String>[
-                        session.fullTitle,
-                        if (session.episodeLabel.isNotEmpty)
-                          session.episodeLabel,
-                      ].join(' • '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium,
+              _Poster(url: posterUrl, width: 58, height: 87),
+              const SizedBox(width: Insets.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Icon(
+                          playing ? Icons.play_arrow : Icons.pause,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            session.fullTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _DecisionChip(decision: session.transcodeDecision),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: Insets.xs),
-                  _DecisionChip(decision: session.transcodeDecision),
-                ],
-              ),
-              const SizedBox(height: Insets.sm),
-              LinearProgressIndicator(value: pct.clamp(0, 1)),
-              const SizedBox(height: Insets.xs),
-              Text(
-                <String>[
-                  session.friendlyName,
-                  if (session.player.isNotEmpty) session.player,
-                  if (session.qualityProfile.isNotEmpty)
-                    session.qualityProfile,
-                  if (session.bandwidth > 0)
-                    fmtTautulliKbps(session.bandwidth),
-                ].join(' • '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall,
+                    if (session.episodeLabel.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          session.episodeLabel,
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: theme.colorScheme.outline),
+                        ),
+                      ),
+                    const SizedBox(height: Insets.sm),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: pct.clamp(0, 1),
+                        minHeight: 5,
+                      ),
+                    ),
+                    const SizedBox(height: Insets.sm),
+                    Row(
+                      children: <Widget>[
+                        _Avatar(
+                          url: avatarUrl,
+                          initial: _initial(session.friendlyName),
+                          radius: 9,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            meta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -259,6 +351,8 @@ class _SessionSheetState extends ConsumerState<_SessionSheet> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final TautulliSession s = widget.session;
+    final TautulliApi? api =
+        ref.watch(tautulliApiProvider(widget.instance)).valueOrNull;
     final String video = _streamLine(
       s.videoDecision,
       s.videoCodec,
@@ -278,18 +372,34 @@ class _SessionSheetState extends ConsumerState<_SessionSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text(s.fullTitle, style: theme.textTheme.titleMedium),
-            if (s.episodeLabel.isNotEmpty || s.year.isNotEmpty) ...<Widget>[
-              const SizedBox(height: Insets.xs),
-              Text(
-                <String>[
-                  if (s.episodeLabel.isNotEmpty) s.episodeLabel,
-                  if (s.year.isNotEmpty) s.year,
-                ].join(' • '),
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: theme.colorScheme.outline),
-              ),
-            ],
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _Poster(url: api?.imageUrl(s.posterThumb), width: 64, height: 96),
+                const SizedBox(width: Insets.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(s.fullTitle, style: theme.textTheme.titleMedium),
+                      if (s.episodeLabel.isNotEmpty || s.year.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: Insets.xs),
+                        Text(
+                          <String>[
+                            if (s.episodeLabel.isNotEmpty) s.episodeLabel,
+                            if (s.year.isNotEmpty) s.year,
+                          ].join(' • '),
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: theme.colorScheme.outline),
+                        ),
+                      ],
+                      const SizedBox(height: Insets.sm),
+                      _DecisionChip(decision: s.transcodeDecision),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: Insets.md),
             _DetailRow(label: 'User', value: s.friendlyName),
             _DetailRow(label: 'State', value: _capitalize(s.state)),
@@ -442,6 +552,7 @@ class _HistoryTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<TautulliHistoryPage> history =
         ref.watch(tautulliHistoryProvider(instance));
+    final TautulliApi? api = ref.watch(tautulliApiProvider(instance)).valueOrNull;
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(tautulliHistoryProvider(instance)),
       child: AsyncValueView<TautulliHistoryPage>(
@@ -455,13 +566,15 @@ class _HistoryTab extends ConsumerWidget {
               message: 'Nothing has been watched yet.',
             );
           }
-          return ListView.builder(
-            padding: Insets.pageH,
+          return ListView.separated(
+            padding: Insets.page,
             itemCount: page.records.length + 1,
+            separatorBuilder: (_, __) =>
+                const Divider(height: 1, indent: 56),
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: Insets.sm),
+                  padding: const EdgeInsets.only(bottom: Insets.sm),
                   child: Text(
                     '${page.recordsTotal} plays total • showing latest '
                     '${page.records.length}',
@@ -471,7 +584,12 @@ class _HistoryTab extends ConsumerWidget {
                   ),
                 );
               }
-              return _HistoryTile(record: page.records[index - 1]);
+              final TautulliHistoryRecord r = page.records[index - 1];
+              return _HistoryTile(
+                record: r,
+                posterUrl: api?.imageUrl(r.posterThumb),
+                avatarUrl: api?.imageUrl(r.userThumb, fallback: 'art'),
+              );
             },
           );
         },
@@ -481,9 +599,15 @@ class _HistoryTab extends ConsumerWidget {
 }
 
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.record});
+  const _HistoryTile({
+    required this.record,
+    required this.posterUrl,
+    required this.avatarUrl,
+  });
 
   final TautulliHistoryRecord record;
+  final String? posterUrl;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -493,28 +617,64 @@ class _HistoryTile extends StatelessWidget {
       >= 0.5 => (Icons.timelapse, theme.colorScheme.secondary),
       _ => (Icons.radio_button_unchecked, theme.colorScheme.outline),
     };
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: color),
-      title: Text(
-        record.fullTitle,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        <String>[
-          record.friendlyName,
-          relativeEpoch(record.date),
-          if (record.playDuration > 0) fmtSeconds(record.playDuration),
-          if (record.player.isNotEmpty) record.player,
-        ].join(' • '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Text(
-        '${record.percentComplete}%',
-        style: theme.textTheme.labelMedium
-            ?.copyWith(color: theme.colorScheme.outline),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Insets.sm),
+      child: Row(
+        children: <Widget>[
+          _Poster(url: posterUrl, width: 40, height: 60),
+          const SizedBox(width: Insets.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  record.fullTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: <Widget>[
+                    _Avatar(
+                      url: avatarUrl,
+                      initial: _initial(record.friendlyName),
+                      radius: 8,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        <String>[
+                          record.friendlyName,
+                          relativeEpoch(record.date),
+                          if (record.playDuration > 0)
+                            fmtSeconds(record.playDuration),
+                        ].join(' • '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall
+                            ?.copyWith(color: theme.colorScheme.outline),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: Insets.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              Icon(icon, color: color, size: 18),
+              const SizedBox(height: 2),
+              Text(
+                '${record.percentComplete}%',
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(color: theme.colorScheme.outline),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -532,6 +692,7 @@ class _StatsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<TautulliHomeStat>> stats =
         ref.watch(tautulliHomeStatsProvider(instance));
+    final TautulliApi? api = ref.watch(tautulliApiProvider(instance)).valueOrNull;
     return RefreshIndicator(
       onRefresh: () async =>
           ref.invalidate(tautulliHomeStatsProvider(instance)),
@@ -553,7 +714,7 @@ class _StatsTab extends ConsumerWidget {
             padding: Insets.page,
             itemCount: sections.length,
             itemBuilder: (BuildContext context, int index) =>
-                _StatSection(stat: sections[index]),
+                _StatSection(stat: sections[index], api: api),
           );
         },
       ),
@@ -562,65 +723,151 @@ class _StatsTab extends ConsumerWidget {
 }
 
 class _StatSection extends StatelessWidget {
-  const _StatSection({required this.stat});
+  const _StatSection({required this.stat, required this.api});
 
   final TautulliHomeStat stat;
+  final TautulliApi? api;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(top: Insets.md, bottom: Insets.xs),
-          child: Text(
-            stat.title,
-            style: theme.textTheme.titleSmall
-                ?.copyWith(color: theme.colorScheme.primary),
-          ),
-        ),
-        for (final (int i, TautulliStatRow row) in stat.rows.indexed)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
+    final bool isUsers = stat.statId == 'top_users';
+    final bool isPlatforms = stat.statId == 'top_platforms';
+    final bool isConcurrent = stat.statId == 'most_concurrent';
+    final bool isLastWatched = stat.statId == 'last_watched';
+
+    int metric(TautulliStatRow r) => isConcurrent ? r.count : r.totalPlays;
+    final int maxMetric = stat.rows
+        .fold<int>(0, (int m, TautulliStatRow r) => math.max(m, metric(r)));
+    final bool showBar = !isLastWatched && maxMetric > 0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: Insets.md),
+      child: Padding(
+        padding: const EdgeInsets.all(Insets.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
               children: <Widget>[
-                SizedBox(
-                  width: 24,
-                  child: Text(
-                    '${i + 1}.',
-                    style: theme.textTheme.labelMedium
-                        ?.copyWith(color: theme.colorScheme.outline),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    row.labelFor(stat.statId),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
+                Icon(_statIcon(stat.statId),
+                    size: 18, color: theme.colorScheme.primary,),
+                const SizedBox(width: Insets.sm),
                 Text(
-                  _trailing(row),
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(color: theme.colorScheme.outline),
+                  stat.title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ],
             ),
-          ),
-      ],
+            const SizedBox(height: Insets.sm),
+            for (final (int i, TautulliStatRow row) in stat.rows.indexed)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                      width: 18,
+                      child: Text(
+                        '${i + 1}',
+                        style: theme.textTheme.labelMedium
+                            ?.copyWith(color: theme.colorScheme.outline),
+                      ),
+                    ),
+                    const SizedBox(width: Insets.xs),
+                    _StatLeading(
+                      row: row,
+                      api: api,
+                      isUsers: isUsers,
+                      isPlatforms: isPlatforms,
+                    ),
+                    const SizedBox(width: Insets.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            row.labelFor(stat.statId),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                          if (showBar) ...<Widget>[
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: (metric(row) / maxMetric).clamp(0, 1),
+                                minHeight: 5,
+                                backgroundColor:
+                                    theme.colorScheme.surfaceContainerHighest,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: Insets.sm),
+                    Text(
+                      _trailing(row, isConcurrent, isLastWatched),
+                      style: theme.textTheme.labelMedium
+                          ?.copyWith(color: theme.colorScheme.outline),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
-  String _trailing(TautulliStatRow row) {
-    if (stat.statId == 'most_concurrent') {
+  String _trailing(TautulliStatRow row, bool isConcurrent, bool isLastWatched) {
+    if (isConcurrent) {
       return '${row.count} streams';
     }
-    if (stat.statId == 'last_watched') {
+    if (isLastWatched) {
       return row.user;
     }
     return '${row.totalPlays} plays';
+  }
+}
+
+/// The leading thumbnail for a stat row: poster, user avatar, or platform icon.
+class _StatLeading extends StatelessWidget {
+  const _StatLeading({
+    required this.row,
+    required this.api,
+    required this.isUsers,
+    required this.isPlatforms,
+  });
+
+  final TautulliStatRow row;
+  final TautulliApi? api;
+  final bool isUsers;
+  final bool isPlatforms;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    if (isUsers) {
+      return _Avatar(
+        url: api?.imageUrl(row.userThumb, fallback: 'art'),
+        initial: _initial(row.labelFor('top_users')),
+        radius: 17,
+      );
+    }
+    if (isPlatforms) {
+      return CircleAvatar(
+        radius: 17,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        child: Icon(Icons.devices_outlined,
+            size: 18, color: theme.colorScheme.onSurfaceVariant,),
+      );
+    }
+    return _Poster(url: api?.imageUrl(row.posterThumb), width: 34, height: 51);
   }
 }
 
@@ -636,6 +883,7 @@ class _UsersTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<TautulliUser>> users =
         ref.watch(tautulliUsersProvider(instance));
+    final TautulliApi? api = ref.watch(tautulliApiProvider(instance)).valueOrNull;
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(tautulliUsersProvider(instance)),
       child: AsyncValueView<List<TautulliUser>>(
@@ -649,11 +897,17 @@ class _UsersTab extends ConsumerWidget {
               message: 'Tautulli has not seen any users yet.',
             );
           }
-          return ListView.builder(
-            padding: Insets.pageH,
+          return ListView.separated(
+            padding: Insets.page,
             itemCount: list.length,
-            itemBuilder: (BuildContext context, int index) =>
-                _UserTile(user: list[index]),
+            separatorBuilder: (_, __) => const Divider(height: 1, indent: 56),
+            itemBuilder: (BuildContext context, int index) {
+              final TautulliUser u = list[index];
+              return _UserTile(
+                user: u,
+                avatarUrl: api?.imageUrl(u.userThumb, fallback: 'art'),
+              );
+            },
           );
         },
       ),
@@ -662,36 +916,53 @@ class _UsersTab extends ConsumerWidget {
 }
 
 class _UserTile extends StatelessWidget {
-  const _UserTile({required this.user});
+  const _UserTile({required this.user, required this.avatarUrl});
 
   final TautulliUser user;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String initial =
-        user.friendlyName.isEmpty ? '?' : user.friendlyName[0].toUpperCase();
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(child: Text(initial)),
-      title: Text(
-        user.friendlyName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        <String>[
-          '${user.plays} plays',
-          if (user.duration > 0) fmtSeconds(user.duration),
-          if (user.lastSeen > 0) 'seen ${relativeEpoch(user.lastSeen)}',
-        ].join(' • '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: user.lastPlayed.isEmpty
-          ? null
-          : ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 120),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Insets.sm),
+      child: Row(
+        children: <Widget>[
+          _Avatar(
+            url: avatarUrl,
+            initial: _initial(user.friendlyName),
+            radius: 20,
+          ),
+          const SizedBox(width: Insets.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  user.friendlyName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  <String>[
+                    '${user.plays} plays',
+                    if (user.duration > 0) fmtSeconds(user.duration),
+                    if (user.lastSeen > 0) 'seen ${relativeEpoch(user.lastSeen)}',
+                  ].join(' • '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall
+                      ?.copyWith(color: theme.colorScheme.outline),
+                ),
+              ],
+            ),
+          ),
+          if (user.lastPlayed.isNotEmpty) ...<Widget>[
+            const SizedBox(width: Insets.sm),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 110),
               child: Text(
                 user.lastPlayed,
                 maxLines: 2,
@@ -701,12 +972,103 @@ class _UserTile extends StatelessWidget {
                     ?.copyWith(color: theme.colorScheme.outline),
               ),
             ),
+          ],
+        ],
+      ),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Shared bits
+// Shared widgets
+
+/// A rounded poster image (2:3) with a graceful fallback.
+class _Poster extends StatelessWidget {
+  const _Poster({required this.url, this.width = 48, this.height = 72});
+
+  final String? url;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final Widget fallback = Container(
+      width: width,
+      height: height,
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.movie_outlined,
+        size: width * 0.5,
+        color: theme.colorScheme.outline,
+      ),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: (url == null || url!.isEmpty)
+          ? fallback
+          : CachedNetworkImage(
+              imageUrl: url!,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              memCacheWidth: (width * 3).round(),
+              placeholder: (BuildContext context, String _) => Container(
+                width: width,
+                height: height,
+                color: theme.colorScheme.surfaceContainerHighest,
+              ),
+              errorWidget: (BuildContext context, String _, Object __) =>
+                  fallback,
+            ),
+    );
+  }
+}
+
+/// A circular avatar that loads a Plex user image, falling back to an initial.
+class _Avatar extends StatelessWidget {
+  const _Avatar({
+    required this.url,
+    required this.initial,
+    this.radius = 18,
+  });
+
+  final String? url;
+  final String initial;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    if (url != null && url!.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        foregroundImage: CachedNetworkImageProvider(url!),
+        // If the image fails, the initial below shows through.
+        child: Text(
+          initial,
+          style: TextStyle(
+            fontSize: radius * 0.8,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: theme.colorScheme.primaryContainer,
+      child: Text(
+        initial,
+        style: TextStyle(
+          fontSize: radius * 0.8,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
+      ),
+    );
+  }
+}
 
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.value});
@@ -738,6 +1100,21 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
+
+IconData _statIcon(String statId) => switch (statId) {
+      'top_movies' || 'popular_movies' => Icons.movie_outlined,
+      'top_tv' || 'popular_tv' => Icons.tv_outlined,
+      'top_music' || 'popular_music' => Icons.music_note_outlined,
+      'top_libraries' => Icons.video_library_outlined,
+      'top_users' => Icons.people_alt_outlined,
+      'top_platforms' => Icons.devices_outlined,
+      'last_watched' => Icons.history,
+      'most_concurrent' => Icons.timeline_outlined,
+      _ => Icons.bar_chart,
+    };
+
+String _initial(String name) =>
+    name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
 
 String _capitalize(String s) =>
     s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

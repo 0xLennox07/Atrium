@@ -11,9 +11,34 @@ import 'models/tautulli_models.dart';
 /// (appended by `core_networking`'s [AuthInterceptor]), so this rides the
 /// shared `instanceDioProvider` Dio and just adds `cmd`.
 class TautulliApi {
-  TautulliApi(this._dio);
+  TautulliApi(this._dio, {this.apiKey});
 
   final Dio _dio;
+
+  /// Needed to build image-proxy URLs that bypass Dio - `CachedNetworkImage`
+  /// fetches directly, so the key has to ride in the URL.
+  final String? apiKey;
+
+  /// Builds a Tautulli image-proxy URL for a Plex [thumb] path (poster/art).
+  /// Absolute URLs (e.g. plex.tv user avatars) are returned unchanged; an
+  /// empty thumb yields null so callers can show a fallback.
+  String? imageUrl(
+    String? thumb, {
+    int width = 300,
+    int height = 450,
+    String fallback = 'poster',
+  }) {
+    if (thumb == null || thumb.isEmpty) {
+      return null;
+    }
+    if (thumb.startsWith('http')) {
+      return thumb;
+    }
+    final String base = _dio.options.baseUrl.replaceAll(RegExp(r'/+$'), '');
+    final String img = Uri.encodeQueryComponent(thumb);
+    return '$base/api/v2?cmd=pms_image_proxy&img=$img'
+        '&width=$width&height=$height&fallback=$fallback&apikey=${apiKey ?? ''}';
+  }
 
   /// Runs a command and returns `response.data`.
   ///

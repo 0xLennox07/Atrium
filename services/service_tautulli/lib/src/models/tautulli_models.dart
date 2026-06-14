@@ -39,6 +39,9 @@ class TautulliHistoryRecord {
     required this.platform,
     required this.player,
     required this.transcodeDecision,
+    required this.thumb,
+    required this.grandparentThumb,
+    required this.userThumb,
   });
 
   factory TautulliHistoryRecord.fromJson(Map<String, dynamic> json) {
@@ -56,6 +59,9 @@ class TautulliHistoryRecord {
       platform: tString(json['platform']),
       player: tString(json['player']),
       transcodeDecision: tString(json['transcode_decision']),
+      thumb: tString(json['thumb']),
+      grandparentThumb: tString(json['grandparent_thumb']),
+      userThumb: tString(json['user_thumb']),
     );
   }
 
@@ -74,6 +80,15 @@ class TautulliHistoryRecord {
   final String platform;
   final String player;
   final String transcodeDecision;
+
+  /// Plex image paths (proxied through Tautulli for display).
+  final String thumb;
+  final String grandparentThumb;
+  final String userThumb;
+
+  /// Best poster path: the show poster for episodes, else the item's thumb.
+  String get posterThumb =>
+      grandparentThumb.isNotEmpty ? grandparentThumb : thumb;
 }
 
 /// One section from `cmd=get_home_stats` (e.g. top_movies, top_users).
@@ -154,6 +169,16 @@ class TautulliStatRow {
 
   /// For last_watched rows.
   String get user => tString(raw['user']);
+
+  /// Plex image paths carried on media/user rows.
+  String get thumb => tString(raw['thumb']);
+  String get grandparentThumb => tString(raw['grandparent_thumb']);
+  String get userThumb => tString(raw['user_thumb']);
+  String get ratingKey => tString(raw['rating_key']);
+
+  /// Best poster path for media rows.
+  String get posterThumb =>
+      grandparentThumb.isNotEmpty ? grandparentThumb : thumb;
 }
 
 /// One row from `cmd=get_users_table`.
@@ -166,9 +191,11 @@ class TautulliUser {
     required this.duration,
     required this.lastPlayed,
     required this.isActive,
+    required this.userThumb,
   });
 
   factory TautulliUser.fromJson(Map<String, dynamic> json) {
+    final String thumb = tString(json['user_thumb']);
     return TautulliUser(
       userId: tInt(json['user_id']),
       friendlyName: tString(json['friendly_name']),
@@ -177,6 +204,7 @@ class TautulliUser {
       duration: tInt(json['duration']),
       lastPlayed: tString(json['last_played']),
       isActive: tInt(json['is_active']) == 1,
+      userThumb: thumb.isNotEmpty ? thumb : tString(json['thumb']),
     );
   }
 
@@ -191,4 +219,7 @@ class TautulliUser {
   final int duration;
   final String lastPlayed;
   final bool isActive;
+
+  /// Plex avatar URL (usually an absolute plex.tv URL).
+  final String userThumb;
 }

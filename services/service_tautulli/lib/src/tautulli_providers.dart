@@ -20,7 +20,11 @@ final tautulliApiProvider =
       Instance instance,
     ) async {
       final dio = await ref.watch(instanceDioProvider(instance).future);
-      return TautulliApi(dio);
+      final String? apiKey = switch (instance.auth) {
+        InstanceAuthApiKey(:final String apiKey) => apiKey,
+        _ => null,
+      };
+      return TautulliApi(dio, apiKey: apiKey);
     });
 
 /// Current activity (active streams). Polls while watched.

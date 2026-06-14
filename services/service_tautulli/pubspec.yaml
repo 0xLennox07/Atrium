@@ -8,6 +8,7 @@ environment:
   flutter: ^3.27.0
 
 dependencies:
+  cached_network_image: ^3.4.1
   collection: ^1.18.0
   core_models:
   core_networking:
