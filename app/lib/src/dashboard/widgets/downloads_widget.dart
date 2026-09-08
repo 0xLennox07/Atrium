@@ -16,15 +16,30 @@ import '../dashboard_widget_card.dart';
 import '../dashboard_widget_kind.dart';
 import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
 
-/// qBittorrent states that count as actively downloading.
-const Set<String> _activeDlStates = <String>{
+/// qBittorrent states where data is actually moving, or about to.
+const Set<String> _movingDlStates = <String>{
   'downloading',
   'forcedDL',
   'metaDL',
-  'stalledDL',
-  'queuedDL',
   'checkingDL',
   'allocating',
+};
+
+/// States that belong on the card but are not going anywhere yet: queued is
+/// waiting its turn, stalled is connected to nobody.
+const Set<String> _waitingDlStates = <String>{
+  'stalledDL',
+  'queuedDL',
+};
+
+/// qBittorrent states that count as a download in progress.
+///
+/// Queued and stalled are included on purpose: they are downloads someone is
+/// waiting on, and dropping them would understate the count. They are ranked
+/// below moving ones for display, which is a separate matter to being counted.
+const Set<String> _activeDlStates = <String>{
+  ..._movingDlStates,
+  ..._waitingDlStates,
 };
 
 /// Live count of active downloads across every qBittorrent + SABnzbd + NZBGet
@@ -98,11 +113,21 @@ class _DownloadRow {
     required this.name,
     required this.progress,
     required this.instance,
+    this.moving = true,
   });
 
   final String name;
   final double progress;
   final Instance instance;
+
+  /// Whether data is actually moving for this one.
+  ///
+  /// The card only has room for a few rows, and sorting purely on progress put
+  /// a torrent queued at 90% above one downloading at 10%, so a busy queue
+  /// hid the very thing the card exists to show. Only qBittorrent reports a
+  /// state fine-grained enough to tell; every other client is already filtered
+  /// to what is downloading, so they default to moving.
+  final bool moving;
 }
 
 /// Combined qBittorrent + SABnzbd + NZBGet + Deluge activity: total speed,
@@ -146,6 +171,7 @@ class DashboardDownloadsWidget extends ConsumerWidget {
             name: t.name,
             progress: t.progress.clamp(0, 1).toDouble(),
             instance: i,
+            moving: _movingDlStates.contains(t.state),
           ));
         }
       }
@@ -242,8 +268,15 @@ class DashboardDownloadsWidget extends ConsumerWidget {
       totalSpeed += ref.watch(rtorrentGlobalProvider(i)).value?.downRate ?? 0;
     }
 
-    rows.sort(
-        (_DownloadRow a, _DownloadRow b) => b.progress.compareTo(a.progress));
+    // What is moving comes first, then furthest along. Progress alone let a
+    // queue full of nearly-complete torrents push the live download off a card
+    // that only shows three.
+    rows.sort((_DownloadRow a, _DownloadRow b) {
+      if (a.moving != b.moving) {
+        return a.moving ? -1 : 1;
+      }
+      return b.progress.compareTo(a.progress);
+    });
     final List<_DownloadRow> top = rows.take(3).toList();
 
     Widget body;
