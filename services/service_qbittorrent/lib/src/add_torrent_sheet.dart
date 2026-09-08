@@ -85,6 +85,18 @@ class _AddTorrentSheetState extends ConsumerState<AddTorrentSheet> {
   final List<TorrentFileArg> _files = <TorrentFileArg>[];
   int _done = 0;
   String? _category;
+
+  /// The server's global save path, once preferences arrive.
+  String _defaultSavePath = '';
+
+  /// Whether the field has been filled in from the server yet. The prefill is
+  /// one-shot: it must not keep reasserting itself over someone's typing every
+  /// time this rebuilds.
+  bool _prefilledSavePath = false;
+
+  /// Set once the field is edited by hand, so a slow preferences fetch landing
+  /// afterwards does not overwrite what was typed.
+  bool _savePathEdited = false;
   bool _paused = false;
   bool _sequential = false;
   bool _skipHashCheck = false;
@@ -215,11 +227,46 @@ class _AddTorrentSheetState extends ConsumerState<AddTorrentSheet> {
     }
   }
 
+  /// Fills the save path in from the server the first time it is known.
+  ///
+  /// Called from build rather than initState because the value arrives with
+  /// the preferences fetch. It only writes to the controller, so there is no
+  /// setState and no rebuild loop.
+  void _prefillSavePath(Map<String, dynamic>? prefs) {
+    if (prefs == null) {
+      return;
+    }
+    _defaultSavePath = prefs['save_path']?.toString() ?? '';
+    if (_prefilledSavePath || _savePathEdited || _defaultSavePath.isEmpty) {
+      return;
+    }
+    if (_savePath.text.isEmpty) {
+      _savePath.text = _defaultSavePath;
+    }
+    _prefilledSavePath = true;
+  }
+
+  /// Moves the save path to match a newly chosen category.
+  ///
+  /// This is what qBittorrent's own web interface does: picking a category
+  /// rewrites the field, and a category that defines no path of its own falls
+  /// back to the global default rather than blanking it.
+  void _applyCategoryPath(String? category, Map<String, String> paths) {
+    final String forCategory = category == null ? '' : (paths[category] ?? '');
+    _savePath.text =
+        forCategory.isNotEmpty ? forCategory : _defaultSavePath;
+    // The field now holds a server value again, not a hand-typed one.
+    _savePathEdited = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final AsyncValue<List<String>> categories =
-        ref.watch(qbitCategoriesProvider(widget.instance));
+    final AsyncValue<Map<String, String>> categoryPaths =
+        ref.watch(qbitCategoryPathsProvider(widget.instance));
+    _prefillSavePath(
+      ref.watch(qbitPreferencesProvider(widget.instance)).value,
+    );
 
     return AlertDialog(
       title: const Text('Add torrent'),
@@ -248,26 +295,32 @@ class _AddTorrentSheetState extends ConsumerState<AddTorrentSheet> {
                 label: Text(_fileLabel),
               ),
             const SizedBox(height: Insets.md),
-            categories.when(
-              data: (List<String> cats) => DropdownButtonFormField<String>(
-                initialValue: _category,
-                decoration: const InputDecoration(
-                  labelText: 'Category (optional)',
-                  border: OutlineInputBorder(),
-                ),
-                items: <DropdownMenuItem<String>>[
-                  const DropdownMenuItem<String>(
-                    child: Text('None'),
+            categoryPaths.when(
+              data: (Map<String, String> paths) {
+                final List<String> cats = paths.keys.toList()..sort();
+                return DropdownButtonFormField<String>(
+                  initialValue: _category,
+                  decoration: const InputDecoration(
+                    labelText: 'Category (optional)',
+                    border: OutlineInputBorder(),
                   ),
-                  ...cats.map(
-                    (String c) => DropdownMenuItem<String>(
-                      value: c,
-                      child: Text(c),
+                  items: <DropdownMenuItem<String>>[
+                    const DropdownMenuItem<String>(
+                      child: Text('None'),
                     ),
-                  ),
-                ],
-                onChanged: (String? v) => setState(() => _category = v),
-              ),
+                    ...cats.map(
+                      (String c) => DropdownMenuItem<String>(
+                        value: c,
+                        child: Text(c),
+                      ),
+                    ),
+                  ],
+                  onChanged: (String? v) {
+                    setState(() => _category = v);
+                    _applyCategoryPath(v, paths);
+                  },
+                );
+              },
               loading: () => const LinearProgressIndicatorM3E(
                 shape: ProgressM3EShape.flat,
               ),
@@ -276,8 +329,9 @@ class _AddTorrentSheetState extends ConsumerState<AddTorrentSheet> {
             const SizedBox(height: Insets.sm),
             TextField(
               controller: _savePath,
+              onChanged: (_) => _savePathEdited = true,
               decoration: const InputDecoration(
-                labelText: 'Save path (optional)',
+                labelText: 'Save path',
                 hintText: 'Leave blank for the default',
                 border: OutlineInputBorder(),
               ),
