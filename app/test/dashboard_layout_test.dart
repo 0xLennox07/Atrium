@@ -105,15 +105,15 @@ void main() {
           .where((DashboardWidgetConfig c) => c.enabled)
           .map((DashboardWidgetConfig c) => c.kind)
           .toList();
-      expect(enabled, <DashboardWidgetKind>[
-        DashboardWidgetKind.upcoming,
-        DashboardWidgetKind.recentlyAdded,
-        DashboardWidgetKind.downloads,
-        DashboardWidgetKind.recentlyDownloaded,
-        DashboardWidgetKind.requests,
-        DashboardWidgetKind.serverInfo,
-        DashboardWidgetKind.speedtestResults,
-      ]);
+      // Derived rather than frozen: a new widget kind appends to this list,
+      // and spelling it out here means every one of them breaks this test for
+      // no reason. moveEnabled(0, 2) is just a remove-and-insert.
+      final List<DashboardWidgetKind> expected = <DashboardWidgetKind>[
+        for (final DashboardWidgetKind k in DashboardWidgetKind.values)
+          if (k != DashboardWidgetKind.streams) k,
+      ];
+      expected.insert(2, expected.removeAt(0));
+      expect(enabled, expected);
       // The disabled widget is still present, at the end.
       final List<DashboardWidgetConfig> all =
           container.read(dashboardLayoutProvider);
