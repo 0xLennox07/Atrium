@@ -20,3 +20,19 @@ final instanceHealthProvider =
   if (instance == null) return Health.unknown;
   return ref.watch(healthProbeProvider).check(instance);
 });
+
+/// Tracks when service health probes were last refreshed across the app.
+class LastHealthRefreshNotifier extends Notifier<DateTime?> {
+  @override
+  DateTime? build() => null;
+
+  void markRefreshed() {
+    state = DateTime.now();
+  }
+}
+
+final NotifierProvider<LastHealthRefreshNotifier, DateTime?>
+    lastHealthRefreshProvider =
+    NotifierProvider<LastHealthRefreshNotifier, DateTime?>(
+  LastHealthRefreshNotifier.new,
+);

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_profile/core_profile.dart';
 import 'package:core_router/core_router.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -72,7 +75,7 @@ class DashboardScreen extends ConsumerWidget {
 /// The sidebar: configured services grouped by role (each with a live health
 /// dot), with settings, add-service and the active-profile pill along the
 /// bottom.
-class ServicesDrawer extends ConsumerWidget {
+class ServicesDrawer extends ConsumerStatefulWidget {
   const ServicesDrawer({
     required this.instances,
     required this.profile,
@@ -83,7 +86,99 @@ class ServicesDrawer extends ConsumerWidget {
   final Profile? profile;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ServicesDrawer> createState() => _ServicesDrawerState();
+}
+
+class _ServicesDrawerState extends ConsumerState<ServicesDrawer>
+    with WidgetsBindingObserver {
+  Timer? _pollingTimer;
+  Future<void>? _activeRefreshFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _checkHealthFreshness();
+      _startPolling();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Stop the timer outright rather than letting it fire and return early.
+    // A drawer left open behind a locked screen otherwise wakes every 30
+    // seconds for the rest of the session to decide it has nothing to do.
+    if (state == AppLifecycleState.resumed) {
+      if (_pollingTimer == null) {
+        _startPolling();
+      }
+    } else {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
+    }
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted) return;
+      _refreshHealth();
+    });
+  }
+
+  void _checkHealthFreshness() {
+    final DateTime? lastCheck = ref.read(lastHealthRefreshProvider);
+    if (lastCheck == null ||
+        DateTime.now().difference(lastCheck) > const Duration(seconds: 60)) {
+      _refreshHealth();
+    }
+  }
+
+  Future<void> _refreshHealth() {
+    if (_activeRefreshFuture != null) {
+      return _activeRefreshFuture!;
+    }
+    if (widget.instances.isEmpty || !mounted) {
+      return Future<void>.value();
+    }
+    final AppLifecycleState? state =
+        SchedulerBinding.instance.lifecycleState;
+    if (state != null && state != AppLifecycleState.resumed) {
+      return Future<void>.value();
+    }
+
+    // Marked on completion, not on entry. A probe that has been fired but
+    // has not answered yet is not a fresh result, and stamping it up front
+    // meant a round that failed immediately still counted as fresh for the
+    // next sixty seconds. Overlapping rounds are held off by
+    // _activeRefreshFuture above instead.
+    final Future<void> future = Future.wait(
+      widget.instances.map(
+        (Instance i) => ref.refresh(instanceHealthProvider(i.id).future),
+      ),
+    ).then((_) {
+      if (mounted) {
+        ref.read(lastHealthRefreshProvider.notifier).markRefreshed();
+      }
+    }).catchError((_) {}).whenComplete(() {
+      _activeRefreshFuture = null;
+    });
+
+    _activeRefreshFuture = future;
+    return future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme cs = theme.colorScheme;
     final List<Profile> profiles =
@@ -135,7 +230,7 @@ class ServicesDrawer extends ConsumerWidget {
             ),
             const Divider(height: 1),
             Expanded(
-              child: instances.isEmpty
+              child: widget.instances.isEmpty
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(Insets.lg),
@@ -148,7 +243,10 @@ class ServicesDrawer extends ConsumerWidget {
                         ),
                       ),
                     )
-                  : _ServicesList(instances: instances),
+                  : _ServicesList(
+                      instances: widget.instances,
+                      onRefresh: _refreshHealth,
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(Insets.md),
@@ -165,7 +263,7 @@ class ServicesDrawer extends ConsumerWidget {
                     onPressed: () =>
                         _navTo(context, AtriumRoutes.addInstanceName),
                   ),
-                  if (instances.isNotEmpty)
+                  if (widget.instances.isNotEmpty)
                     IconButton(
                       tooltip: 'Reorder sidebar',
                       icon: Icon(Icons.reorder, color: cs.onSurfaceVariant),
@@ -185,7 +283,7 @@ class ServicesDrawer extends ConsumerWidget {
                     child: Builder(
                       builder: (BuildContext pillContext) {
                         return _ProfilePill(
-                          label: profile?.name ?? 'Default',
+                          label: widget.profile?.name ?? 'Default',
                           onTap: () async {
                             final RenderBox button =
                                 pillContext.findRenderObject()! as RenderBox;
@@ -218,7 +316,7 @@ class ServicesDrawer extends ConsumerWidget {
                                         Icon(
                                           Icons.smartphone,
                                           size: 16,
-                                          color: p.id == profile?.id
+                                          color: p.id == widget.profile?.id
                                               ? cs.primary
                                               : cs.outline,
                                         ),
@@ -227,13 +325,13 @@ class ServicesDrawer extends ConsumerWidget {
                                           child: Text(
                                             p.name,
                                             style: TextStyle(
-                                              fontWeight: p.id == profile?.id
+                                              fontWeight: p.id == widget.profile?.id
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
                                             ),
                                           ),
                                         ),
-                                        if (p.id == profile?.id)
+                                        if (p.id == widget.profile?.id)
                                           Icon(
                                             Icons.check,
                                             size: 16,
@@ -306,9 +404,13 @@ class ServicesDrawer extends ConsumerWidget {
 }
 
 class _ServicesList extends StatelessWidget {
-  const _ServicesList({required this.instances});
+  const _ServicesList({
+    required this.instances,
+    required this.onRefresh,
+  });
 
   final List<Instance> instances;
+  final RefreshCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -330,34 +432,50 @@ class _ServicesList extends StatelessWidget {
       }
     }
 
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(Insets.sm),
-      itemCount: items.length,
-      itemBuilder: (BuildContext context, int index) {
-        final _SidebarItem item = items[index];
-        if (item.header != null) {
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: 'Pull to refresh',
+        armedText: 'Release ready',
+        readyText: 'Refreshing...',
+        processingText: 'Refreshing...',
+        processedText: 'Succeeded',
+        failedText: 'Failed',
+        // No "last updated at" line. EasyRefresh renders %T as a raw
+        // DateTime.hour, so it reads 0:05 where the device clock says 12:05
+        // AM and 13:05 where it says 1:05 PM, and the package offers no hook
+        // to format it against the device's locale.
+        showMessage: false,
+      ),
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(Insets.sm),
+        itemCount: items.length,
+        itemBuilder: (BuildContext context, int index) {
+          final _SidebarItem item = items[index];
+          if (item.header != null) {
+            return Padding(
+              padding: const EdgeInsets.only(
+                top: Insets.md,
+                bottom: Insets.xs,
+                left: Insets.sm,
+              ),
+              child: Text(
+                ServiceVisuals.roleLabel(item.header!),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+            );
+          }
           return Padding(
-            padding: const EdgeInsets.only(
-              top: Insets.md,
-              bottom: Insets.xs,
-              left: Insets.sm,
-            ),
-            child: Text(
-              ServiceVisuals.roleLabel(item.header!),
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+            padding: const EdgeInsets.only(bottom: Insets.xs),
+            child: RepaintBoundary(
+              child: _HealthAwareTile(instance: item.tile!),
             ),
           );
-        }
-        return Padding(
-          padding: const EdgeInsets.only(bottom: Insets.xs),
-          child: RepaintBoundary(
-            child: _HealthAwareTile(instance: item.tile!),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }
