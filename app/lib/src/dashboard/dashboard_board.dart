@@ -177,6 +177,7 @@ class DashboardBoard extends ConsumerWidget {
   }
 
   void _refreshAll(WidgetRef ref, List<Instance> instances) {
+    ref.read(lastHealthRefreshProvider.notifier).markRefreshed();
     for (final Instance i in instances) {
       ref.invalidate(instanceHealthProvider(i.id));
       switch (i.kind) {
