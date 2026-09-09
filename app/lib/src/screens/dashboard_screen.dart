@@ -89,13 +89,15 @@ class ServicesDrawer extends ConsumerStatefulWidget {
   ConsumerState<ServicesDrawer> createState() => _ServicesDrawerState();
 }
 
-class _ServicesDrawerState extends ConsumerState<ServicesDrawer> {
+class _ServicesDrawerState extends ConsumerState<ServicesDrawer>
+    with WidgetsBindingObserver {
   Timer? _pollingTimer;
   Future<void>? _activeRefreshFuture;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _checkHealthFreshness();
@@ -106,18 +108,30 @@ class _ServicesDrawerState extends ConsumerState<ServicesDrawer> {
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Stop the timer outright rather than letting it fire and return early.
+    // A drawer left open behind a locked screen otherwise wakes every 30
+    // seconds for the rest of the session to decide it has nothing to do.
+    if (state == AppLifecycleState.resumed) {
+      if (_pollingTimer == null) {
+        _startPolling();
+      }
+    } else {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
+    }
   }
 
   void _startPolling() {
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!mounted) return;
-      final AppLifecycleState? state =
-          SchedulerBinding.instance.lifecycleState;
-      if (state == null || state == AppLifecycleState.resumed) {
-        _refreshHealth();
-      }
+      _refreshHealth();
     });
   }
 
@@ -142,12 +156,20 @@ class _ServicesDrawerState extends ConsumerState<ServicesDrawer> {
       return Future<void>.value();
     }
 
-    ref.read(lastHealthRefreshProvider.notifier).markRefreshed();
+    // Marked on completion, not on entry. A probe that has been fired but
+    // has not answered yet is not a fresh result, and stamping it up front
+    // meant a round that failed immediately still counted as fresh for the
+    // next sixty seconds. Overlapping rounds are held off by
+    // _activeRefreshFuture above instead.
     final Future<void> future = Future.wait(
       widget.instances.map(
         (Instance i) => ref.refresh(instanceHealthProvider(i.id).future),
       ),
-    ).then((_) {}).catchError((_) {}).whenComplete(() {
+    ).then((_) {
+      if (mounted) {
+        ref.read(lastHealthRefreshProvider.notifier).markRefreshed();
+      }
+    }).catchError((_) {}).whenComplete(() {
       _activeRefreshFuture = null;
     });
 
@@ -418,7 +440,11 @@ class _ServicesList extends StatelessWidget {
         processingText: 'Refreshing...',
         processedText: 'Succeeded',
         failedText: 'Failed',
-        messageText: 'Last updated at %T',
+        // No "last updated at" line. EasyRefresh renders %T as a raw
+        // DateTime.hour, so it reads 0:05 where the device clock says 12:05
+        // AM and 13:05 where it says 1:05 PM, and the package offers no hook
+        // to format it against the device's locale.
+        showMessage: false,
       ),
       onRefresh: onRefresh,
       child: ListView.builder(

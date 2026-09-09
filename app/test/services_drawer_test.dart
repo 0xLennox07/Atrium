@@ -210,4 +210,79 @@ void main() {
     // Verify no additional probes occurred while closed.
     expect(probeCount, equals(countAfter30s));
   });
+
+  testWidgets('polling stops while the app is backgrounded and resumes after',
+      (WidgetTester tester) async {
+    // The drawer can be left open behind a lock screen. The timer is stopped
+    // outright there rather than left ticking to decide it has nothing to do,
+    // so this checks the timer is really gone and really comes back.
+    int probeCount = 0;
+    final Profile profile = _testProfile();
+    final ProviderContainer container = ProviderContainer(
+      overrides: [
+        activeProfileProvider.overrideWith((Ref ref) => profile),
+        profileListProvider.overrideWith(_FakeProfileListController.new),
+        instanceHealthProvider.overrideWith((Ref ref, String id) {
+          probeCount++;
+          return Health.ok;
+        }),
+      ],
+    );
+    container.read(lastHealthRefreshProvider.notifier).state = DateTime.now();
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AtriumTheme.light(null),
+          home: Scaffold(
+            drawer: ServicesDrawer(
+              instances: profile.instances,
+              profile: profile,
+            ),
+            body: Builder(
+              builder: (BuildContext context) => ElevatedButton(
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pumpAndSettle();
+    final int whileOpen = probeCount;
+    expect(
+      whileOpen,
+      greaterThan(0),
+      reason: 'polling should be running before it can be shown to stop',
+    );
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 120));
+    await tester.pumpAndSettle();
+
+    expect(
+      probeCount,
+      equals(whileOpen),
+      reason: 'a backgrounded app must not keep probing every 30 seconds',
+    );
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pumpAndSettle();
+
+    expect(
+      probeCount,
+      greaterThan(whileOpen),
+      reason: 'coming back to the foreground has to start the timer again',
+    );
+  });
 }
