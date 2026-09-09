@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +57,7 @@ class _SeerrItemDetailScreenState extends ConsumerState<SeerrItemDetailScreen> {
     _lastPosterUrl = posterUrl;
 
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
       timeout: Duration.zero,
     ).then((PaletteGenerator palette) {
@@ -158,7 +157,7 @@ class _SeerrItemDetailScreenState extends ConsumerState<SeerrItemDetailScreen> {
                       children: <Widget>[
                         Positioned.fill(
                           child: backdropUrl != null
-                              ? CachedNetworkImage(
+                              ? AtriumNetworkImage(
                                   key: ValueKey<String>(backdropUrl),
                                   imageUrl: backdropUrl,
                                   fit: BoxFit.cover,
@@ -338,7 +337,7 @@ class _DetailHeader extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(Radii.lg),
             child: posterUrl != null
-                ? CachedNetworkImage(
+                ? AtriumNetworkImage(
                     key: ValueKey<String>(posterUrl!),
                     imageUrl: posterUrl!,
                     width: 120,
@@ -540,7 +539,7 @@ class _CastRow extends StatelessWidget {
                       backgroundColor:
                           theme.colorScheme.surfaceContainerHighest,
                       backgroundImage: profileUrl != null
-                          ? CachedNetworkImageProvider(profileUrl)
+                          ? atriumImageProvider(profileUrl)
                           : null,
                       onBackgroundImageError:
                           profileUrl != null ? (_, __) {} : null,
@@ -669,7 +668,7 @@ class _PosterCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: <Widget>[
                     api?.imageUrl(item.posterPath) != null
-                        ? CachedNetworkImage(
+                        ? AtriumNetworkImage(
                             imageUrl: api!.imageUrl(item.posterPath)!,
                             fit: BoxFit.cover,
                             errorWidget: (_, __, ___) => _posterFallback(theme),

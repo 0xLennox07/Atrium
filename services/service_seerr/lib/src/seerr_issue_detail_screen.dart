@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -382,7 +381,7 @@ class _IssueHeader extends ConsumerWidget {
               width: 72,
               height: 108,
               child: posterUrl != null
-                  ? CachedNetworkImage(
+                  ? AtriumNetworkImage(
                       imageUrl: posterUrl,
                       fit: BoxFit.cover,
                       errorWidget: (_, __, ___) => _posterFallback(cs),

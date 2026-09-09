@@ -10,7 +10,9 @@ environment:
   flutter: ^3.27.0
 
 dependencies:
+  cached_network_image: ^3.4.1
   core_models:
+  core_networking:
   dynamic_system_colors: ^1.9.0
   easy_refresh: ^3.4.0
   flex_color_scheme: ^8.4.0

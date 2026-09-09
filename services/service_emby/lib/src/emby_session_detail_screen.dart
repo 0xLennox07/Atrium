@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -41,7 +40,7 @@ class _EmbySessionDetailScreenState
     _lastPosterUrl = posterUrl;
 
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
     ).then((PaletteGenerator palette) {
       if (mounted) {
@@ -143,7 +142,7 @@ class _EmbySessionDetailScreenState
           children: <Widget>[
             // Background blurred image
             if (session.posterUrl != null)
-              CachedNetworkImage(
+              AtriumNetworkImage(
                 imageUrl: session.posterUrl!,
                 fit: BoxFit.cover,
                 errorWidget: (_, __, ___) =>
@@ -307,7 +306,7 @@ class _EmbySessionDetailScreenState
                                     ],
                                     image: session.posterUrl != null
                                         ? DecorationImage(
-                                            image: CachedNetworkImageProvider(
+                                            image: atriumImageProvider(
                                               session.posterUrl!,
                                             ),
                                             fit: BoxFit.cover,

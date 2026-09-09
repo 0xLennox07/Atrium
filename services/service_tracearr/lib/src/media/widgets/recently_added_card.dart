@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +66,7 @@ class RecentlyAddedCard extends StatelessWidget {
                 width: 48,
                 height: 72,
                 child: posterUrl != null && posterUrl.isNotEmpty
-                    ? CachedNetworkImage(
+                    ? AtriumNetworkImage(
                         imageUrl: posterUrl,
                         fit: BoxFit.cover,
                         errorWidget: (c, u, e) => Container(

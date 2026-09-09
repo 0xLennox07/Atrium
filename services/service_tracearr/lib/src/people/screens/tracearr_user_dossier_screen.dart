@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -126,7 +125,7 @@ class TracearrUserDossierScreen extends ConsumerWidget {
                       backgroundColor: colorScheme.primaryContainer,
                       child: avatar != null && avatar.isNotEmpty
                           ? ClipOval(
-                              child: CachedNetworkImage(
+                              child: AtriumNetworkImage(
                                 imageUrl: avatar,
                                 width: 64,
                                 height: 64,

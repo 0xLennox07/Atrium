@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -109,7 +108,7 @@ class PlexSeasonCard extends StatelessWidget {
     if (imageUrl == null) {
       return fallback;
     }
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
       memCacheWidth: 128,

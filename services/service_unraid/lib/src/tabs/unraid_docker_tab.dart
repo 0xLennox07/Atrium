@@ -369,6 +369,7 @@ class _ContainerAvatar extends StatelessWidget {
           borderRadius: BorderRadius.circular(Radii.sm),
           child: Image.network(
             url,
+            headers: ArtworkHeaders.forUrl(url),
             width: 36,
             height: 36,
             fit: BoxFit.cover,

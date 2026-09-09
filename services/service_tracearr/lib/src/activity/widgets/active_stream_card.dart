@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -120,7 +119,7 @@ class ActiveStreamCard extends StatelessWidget {
                         height: 72,
                         child: stream.posterUrl != null &&
                                 stream.posterUrl!.isNotEmpty
-                            ? CachedNetworkImage(
+                            ? AtriumNetworkImage(
                                 imageUrl: stream.posterUrl!,
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) => Container(
@@ -203,7 +202,7 @@ class ActiveStreamCard extends StatelessWidget {
                                     child: stream.userAvatarUrl != null &&
                                             stream.userAvatarUrl!.isNotEmpty
                                         ? ClipOval(
-                                            child: CachedNetworkImage(
+                                            child: AtriumNetworkImage(
                                               imageUrl: stream.userAvatarUrl!,
                                               width: 18,
                                               height: 18,

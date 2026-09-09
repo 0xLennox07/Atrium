@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -795,7 +794,7 @@ class _PosterImage extends ConsumerWidget {
       );
     }
 
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: url,
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(

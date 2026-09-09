@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_profile/core_profile.dart';
 import 'package:core_router/core_router.dart';
@@ -287,7 +286,7 @@ class _StreamBannerState extends State<_StreamBanner> {
     _lastPosterUrl = posterUrl;
 
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
     ).then((PaletteGenerator palette) {
       if (mounted) {
@@ -341,7 +340,7 @@ class _StreamBannerState extends State<_StreamBanner> {
             fit: StackFit.expand,
             children: <Widget>[
               if (hasArt)
-                CachedNetworkImage(
+                AtriumNetworkImage(
                   imageUrl: backdrop,
                   fit: BoxFit.cover,
                   alignment: Alignment.center,
@@ -349,7 +348,7 @@ class _StreamBannerState extends State<_StreamBanner> {
                   errorWidget: (_, __, ___) => (backdrop != poster &&
                           poster != null &&
                           poster.trim().isNotEmpty)
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: poster,
                           fit: BoxFit.cover,
                           alignment: Alignment.center,
@@ -399,7 +398,7 @@ class _StreamBannerState extends State<_StreamBanner> {
                                 height: 66,
                                 child: (poster == null || poster.isEmpty)
                                     ? _posterFallback(cs)
-                                    : CachedNetworkImage(
+                                    : AtriumNetworkImage(
                                         imageUrl: poster,
                                         fit: BoxFit.cover,
                                         memCacheWidth: 132,

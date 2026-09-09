@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -694,7 +693,7 @@ class _EpisodeListLayout extends ConsumerWidget {
                         if (posterUrl != null)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: CachedNetworkImage(
+                            child: AtriumNetworkImage(
                               imageUrl: posterUrl,
                               width: 48,
                               height: 72,
@@ -1024,7 +1023,7 @@ class _GroupedEpisodeCardState extends ConsumerState<_GroupedEpisodeCard> {
                   if (posterUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
+                      child: AtriumNetworkImage(
                         imageUrl: posterUrl,
                         width: 36,
                         height: 54,

@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
+import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../generated/generated.dart';
@@ -86,7 +86,7 @@ class WantedAlbumCard extends StatelessWidget {
                   width: 52,
                   height: 52,
                   child: coverUrl != null
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: coverUrl,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(

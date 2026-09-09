@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -446,7 +445,7 @@ class _FeaturedHero extends ConsumerWidget {
             children: <Widget>[
               if (backdropUrl != null)
                 Image(
-                  image: CachedNetworkImageProvider(backdropUrl),
+                  image: atriumImageProvider(backdropUrl),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: theme.colorScheme.surfaceContainerHighest,
@@ -630,7 +629,7 @@ class _SessionCard extends ConsumerWidget {
             children: <Widget>[
               if (backdropUrl != null)
                 Image(
-                  image: CachedNetworkImageProvider(backdropUrl),
+                  image: atriumImageProvider(backdropUrl),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
@@ -664,7 +663,7 @@ class _SessionCard extends ConsumerWidget {
                                 Colors.black.withValues(alpha: 0.4),
                             foregroundImage: avatarUrl == null
                                 ? null
-                                : CachedNetworkImageProvider(avatarUrl),
+                                : atriumImageProvider(avatarUrl),
                             onForegroundImageError:
                                 avatarUrl == null ? null : (_, __) {},
                             child: const Icon(
@@ -995,7 +994,7 @@ class PlexPosterCard extends ConsumerWidget {
     if (imageUrl == null) {
       return fallback;
     }
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
       memCacheWidth: 400,

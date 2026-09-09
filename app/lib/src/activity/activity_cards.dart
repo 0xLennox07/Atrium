@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +47,7 @@ class ActivityStreamCard extends StatelessWidget {
             fit: StackFit.expand,
             children: <Widget>[
               if (imageUrl != null && imageUrl.isNotEmpty)
-                CachedNetworkImage(
+                AtriumNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
                   placeholder: (BuildContext context, String _) => ColoredBox(
@@ -190,7 +189,7 @@ class _UserPill extends StatelessWidget {
             backgroundColor: Colors.black.withValues(alpha: 0.4),
             foregroundImage: (avatarUrl == null || avatarUrl!.isEmpty)
                 ? null
-                : CachedNetworkImageProvider(avatarUrl!),
+                : atriumImageProvider(avatarUrl!),
             onForegroundImageError:
                 (avatarUrl == null || avatarUrl!.isEmpty) ? null : (_, __) {},
             child: Text(

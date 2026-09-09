@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_networking/core_networking.dart';
@@ -59,7 +58,7 @@ class _PlexSessionDetailScreenState
 
     // maximumColorCount is left at its default of 16.
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
       timeout: Duration.zero,
     ).then((PaletteGenerator palette) {
@@ -268,7 +267,7 @@ class _PlexSessionDetailScreenState
             // Blurred backdrop behind everything.
             if (backdropUrl != null)
               Image(
-                image: CachedNetworkImageProvider(backdropUrl),
+                image: atriumImageProvider(backdropUrl),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) =>
                     Container(color: theme.colorScheme.surface),
@@ -336,7 +335,7 @@ class _PlexSessionDetailScreenState
                                     )
                                   : Image(
                                       image:
-                                          CachedNetworkImageProvider(posterUrl),
+                                          atriumImageProvider(posterUrl),
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Icon(
                                         Icons.movie_outlined,
@@ -554,7 +553,7 @@ class _UserRow extends StatelessWidget {
           radius: 16,
           backgroundColor: Colors.white.withValues(alpha: 0.2),
           foregroundImage:
-              avatarUrl == null ? null : CachedNetworkImageProvider(avatarUrl!),
+              avatarUrl == null ? null : atriumImageProvider(avatarUrl!),
           onForegroundImageError: avatarUrl == null ? null : (_, __) {},
           child: Text(
             initial,

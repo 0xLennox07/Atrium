@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -586,7 +585,7 @@ class _WantedMovieCard extends ConsumerWidget {
                   width: 50,
                   height: 75,
                   child: posterUrl != null
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: posterUrl,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(

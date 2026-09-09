@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_router/core_router.dart';
 import 'package:core_ui/core_ui.dart';
@@ -173,7 +172,7 @@ class _RequestRow extends ConsumerWidget {
               height: 56,
               child: posterUrl == null
                   ? _posterFallback(cs, r.type)
-                  : CachedNetworkImage(
+                  : AtriumNetworkImage(
                       imageUrl: posterUrl,
                       fit: BoxFit.cover,
                       memCacheWidth: 120,

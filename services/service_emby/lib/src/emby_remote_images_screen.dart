@@ -215,7 +215,7 @@ class _EmbyRemoteImagesScreenState
                     borderRadius: Radii.card,
                     child: ClipRRect(
                       borderRadius: Radii.card,
-                      child: CachedNetworkImage(
+                      child: AtriumNetworkImage(
                         imageUrl: validUrl,
                         fit: BoxFit.cover,
                         placeholder: (BuildContext context, String url) =>

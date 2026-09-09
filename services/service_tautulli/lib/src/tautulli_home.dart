@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_networking/core_networking.dart';
 import 'package:core_ui/core_ui.dart';
@@ -300,7 +299,7 @@ class _SessionCard extends StatelessWidget {
             fit: StackFit.expand,
             children: <Widget>[
               if (imageUrl != null && imageUrl.isNotEmpty)
-                CachedNetworkImage(
+                AtriumNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
                   placeholder: (BuildContext context, String _) => ColoredBox(
@@ -1332,7 +1331,7 @@ class _Poster extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: (url == null || url!.isEmpty)
           ? fallback
-          : CachedNetworkImage(
+          : AtriumNetworkImage(
               imageUrl: url!,
               width: width,
               height: height,
@@ -1369,7 +1368,7 @@ class _Avatar extends StatelessWidget {
       return CircleAvatar(
         radius: radius,
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
-        foregroundImage: CachedNetworkImageProvider(url!),
+        foregroundImage: atriumImageProvider(url!),
         // If the image fails, the initial below shows through.
         child: Text(
           initial,

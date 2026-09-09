@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -519,7 +518,7 @@ class _ArtistMatrixCard extends ConsumerWidget {
                       height: 44,
                       color: cs.surfaceContainerHighest,
                       child: posterUrl != null
-                          ? CachedNetworkImage(
+                          ? AtriumNetworkImage(
                               imageUrl: posterUrl,
                               fit: BoxFit.cover,
                               errorWidget: (_, __, ___) => Icon(
@@ -820,7 +819,7 @@ class _DiscographyMatrix extends StatelessWidget {
                         height: 38,
                         color: cs.surfaceContainerHighest,
                         child: coverUrl != null
-                            ? CachedNetworkImage(
+                            ? AtriumNetworkImage(
                                 imageUrl: coverUrl,
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) => Icon(

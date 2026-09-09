@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -127,7 +126,7 @@ class HistoryItemCard extends StatelessWidget {
                   width: 42,
                   height: 60,
                   child: item.posterUrl != null && item.posterUrl!.isNotEmpty
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: item.posterUrl!,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
@@ -237,7 +236,7 @@ class HistoryItemCard extends StatelessWidget {
                               child: item.userAvatarUrl != null &&
                                       item.userAvatarUrl!.isNotEmpty
                                   ? ClipOval(
-                                      child: CachedNetworkImage(
+                                      child: AtriumNetworkImage(
                                         imageUrl: item.userAvatarUrl!,
                                         width: 16,
                                         height: 16,

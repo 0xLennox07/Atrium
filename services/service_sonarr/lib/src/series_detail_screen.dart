@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -522,7 +521,7 @@ class _HeroInfoCard extends StatelessWidget {
                   width: 110,
                   height: 165,
                   child: posterUrl != null
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: posterUrl!,
                           fit: BoxFit.cover,
                           memCacheWidth: 500,
@@ -2505,7 +2504,7 @@ class _Backdrop extends StatelessWidget {
       fit: StackFit.expand,
       children: <Widget>[
         if (fanartUrl != null)
-          CachedNetworkImage(
+          AtriumNetworkImage(
             imageUrl: fanartUrl!,
             fit: BoxFit.cover,
             memCacheWidth: 1080,
