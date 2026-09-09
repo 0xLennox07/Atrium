@@ -25,7 +25,12 @@ final Provider<ConnectionResolver> connectionResolverProvider =
 
 /// Builds [Dio] clients for instances, using the resolver above.
 final Provider<DioFactory> dioFactoryProvider = Provider<DioFactory>((Ref ref) {
-  return DioFactory(resolver: ref.watch(connectionResolverProvider));
+  // Watching the headers here rebuilds the factory, and every client built
+  // from it, whenever the active profile's headers change.
+  return DioFactory(
+    resolver: ref.watch(connectionResolverProvider),
+    globalHeaders: ref.watch(globalHeadersProvider),
+  );
 });
 
 /// Profile-wide HTTP headers applied to every instance request.
@@ -42,10 +47,7 @@ final StateProvider<Map<String, String>> globalHeadersProvider =
 /// watched.
 final instanceDioProvider =
     FutureProvider.family<Dio, Instance>((Ref ref, Instance instance) async {
-  final Map<String, String> global = ref.watch(globalHeadersProvider);
-  final Dio dio = await ref
-      .watch(dioFactoryProvider)
-      .create(instance, globalHeaders: global);
+  final Dio dio = await ref.watch(dioFactoryProvider).create(instance);
   ref.onDispose(() => dio.close(force: true));
   return dio;
 });
