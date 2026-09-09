@@ -59,8 +59,14 @@ bool rejectsForeignAuthorization(ServiceKind kind) =>
 ///
 /// `Proxy-Authorization` is what RFC 7235 reserves for an intermediary, and
 /// it is the only name that survives every service in the stack: nothing
-/// overwrites it and nothing rejects it. Authelia accepts it on an authz
-/// endpoint carrying the `HeaderProxyAuthorization` strategy.
+/// overwrites it and nothing rejects it.
+///
+/// Whether the proxy reads it is a separate question, and not every one does.
+/// Verified: Authelia accepts it on an authz endpoint carrying the
+/// `HeaderProxyAuthorization` strategy, while nginx's `auth_basic`, which is
+/// what an nginx Proxy Manager access list runs on, only ever reads
+/// `Authorization`. Hence "where your proxy accepts it" in the warning rather
+/// than a flat recommendation.
 const String proxyAuthHeaderName = 'Proxy-Authorization';
 
 /// Why [headerName] will not do what the user expects for [instances], or
@@ -105,6 +111,7 @@ String? headerConflictWarning(String headerName, List<Instance> instances) {
         '${refused.length == 1 ? 'refuses' : 'refuse'} a header of this name '
         'that it did not issue, and will answer 401. ');
   }
-  buffer.write('Use $proxyAuthHeaderName for reverse-proxy auth instead.');
+  buffer.write('Use $proxyAuthHeaderName instead where your proxy accepts '
+      'it, such as Authelia. nginx basic auth only reads this header.');
   return buffer.toString();
 }
