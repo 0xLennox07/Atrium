@@ -67,7 +67,8 @@ void main() {
     await tester.tap(find.text('Open Drawer'));
     await tester.pumpAndSettle();
 
-    // Verify RefreshIndicator exists around the service list.
+    // Verify EasyRefresh exists around the service list.
+    expect(find.byType(EasyRefresh), findsOneWidget);
     expect(find.byType(RefreshIndicator), findsOneWidget);
     expect(find.text('Sonarr'), findsOneWidget);
 
