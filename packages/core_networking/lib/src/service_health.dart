@@ -155,6 +155,7 @@ class HealthProbe {
         instance.kind,
         status,
         resp.data,
+        contentType: resp.headers.value(Headers.contentTypeHeader),
       );
     } on DioException {
       return Health.error;
@@ -172,11 +173,33 @@ class HealthProbe {
 Health interpretServiceHealthResponse(
   ServiceKind kind,
   int status,
-  Object? data,
-) {
+  Object? data, {
+  String? contentType,
+}) {
   if (status == 0) {
     return Health.error;
   }
+
+  // A page where an API should be.
+  //
+  // Every health endpoint here answers with JSON, or XML-RPC in rTorrent's
+  // case. None answer with a web page. A forward-auth proxy redirects an
+  // unauthenticated request to its login portal, the probe follows the
+  // redirect as any client would, and the portal returns a perfectly healthy
+  // 200 full of markup. Status alone cannot tell that apart from a working
+  // server, so a login page was being reported as Online.
+  //
+  // Read from the content type rather than the body: Authelia's portal opens
+  // with a licence comment, so looking for a leading <html would miss it.
+  // Restricted to 2xx because several services legitimately answer with a
+  // page on an error, Transmission's 409 and rTorrent's 502 among them, and
+  // those are already interpreted correctly.
+  if (status >= 200 &&
+      status < 300 &&
+      (contentType?.toLowerCase().contains('text/html') ?? false)) {
+    return Health.warning;
+  }
+
   final _HealthMode mode = _config(kind).mode;
   switch (mode) {
     case _HealthMode.authed:
