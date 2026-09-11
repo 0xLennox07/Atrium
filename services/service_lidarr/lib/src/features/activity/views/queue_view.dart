@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -220,7 +219,7 @@ class _QueueViewState extends ConsumerState<QueueView> {
                         width: 72,
                         height: 72,
                         child: coverUrl != null
-                            ? CachedNetworkImage(
+                            ? AtriumNetworkImage(
                                 imageUrl: coverUrl,
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) => Container(
@@ -880,7 +879,7 @@ class _QueueArtistGroupCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     child: coverUrl != null
-                        ? CachedNetworkImage(
+                        ? AtriumNetworkImage(
                             imageUrl: coverUrl,
                             fit: BoxFit.cover,
                             errorWidget: (_, __, ___) => Container(
@@ -1232,7 +1231,7 @@ class _QueueCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       child: coverUrl != null
-                          ? CachedNetworkImage(
+                          ? AtriumNetworkImage(
                               imageUrl: coverUrl,
                               fit: BoxFit.cover,
                               errorWidget: (_, __, ___) => Container(

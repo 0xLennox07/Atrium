@@ -1,4 +1,5 @@
 import 'package:core_models/core_models.dart';
+import 'package:core_networking/core_networking.dart';
 import 'package:core_profile/core_profile.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -94,7 +95,11 @@ class _CustomHeadersScreenState extends ConsumerState<CustomHeadersScreen> {
     final MapEntry<String, String>? result =
         await showDialog<MapEntry<String, String>>(
       context: context,
-      builder: (BuildContext context) => _HeaderDialog(initial: original),
+      builder: (BuildContext context) => _HeaderDialog(
+        initial: original,
+        appliesTo: ref.read(activeProfileProvider)?.instances ??
+            const <Instance>[],
+      ),
     );
     if (result == null || !mounted) {
       return;
@@ -199,10 +204,15 @@ class _InstanceHeadersScreenState
   Future<void> _editHeader({
     MapEntry<String, String>? original,
   }) async {
+    final Instance? target = ref.read(instanceByIdProvider(widget.instanceId));
     final MapEntry<String, String>? result =
         await showDialog<MapEntry<String, String>>(
       context: context,
-      builder: (BuildContext context) => _HeaderDialog(initial: original),
+      builder: (BuildContext context) => _HeaderDialog(
+        initial: original,
+        appliesTo:
+            target == null ? const <Instance>[] : <Instance>[target],
+      ),
     );
     if (result == null || !mounted) {
       return;
@@ -460,9 +470,14 @@ class _InstanceRow extends StatelessWidget {
 
 /// Add / edit form for one header. Pops with a `MapEntry(name, value)`.
 class _HeaderDialog extends StatefulWidget {
-  const _HeaderDialog({this.initial});
+  const _HeaderDialog({this.initial, this.appliesTo = const <Instance>[]});
 
   final MapEntry<String, String>? initial;
+
+  /// The instances this header will be sent to: every one in the profile for
+  /// a global header, or the single one for a per-instance header. Used only
+  /// to warn about names that will not survive the trip.
+  final List<Instance> appliesTo;
 
   @override
   State<_HeaderDialog> createState() => _HeaderDialogState();
@@ -471,6 +486,10 @@ class _HeaderDialog extends StatefulWidget {
 class _HeaderDialogState extends State<_HeaderDialog> {
   /// RFC 7230 token characters - the set allowed in an HTTP header name.
   static final RegExp _tokenPattern = RegExp(r'^[!#$%&*+.^_|~0-9A-Za-z-]+$');
+
+  /// Why the name being typed will not do what the user expects, if so.
+  String? get _conflict =>
+      headerConflictWarning(_name.text, widget.appliesTo);
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _name =
@@ -507,10 +526,14 @@ class _HeaderDialogState extends State<_HeaderDialog> {
               controller: _name,
               autofocus: widget.initial == null,
               textInputAction: TextInputAction.next,
+              // Proxy-Authorization rather than X-Api-Key: this screen exists
+              // for reverse-proxy auth, and it is the one name no service in
+              // the stack overwrites or refuses.
               decoration: const InputDecoration(
                 labelText: 'Header name',
-                hintText: 'X-Api-Key',
+                hintText: proxyAuthHeaderName,
               ),
+              onChanged: (String _) => setState(() {}),
               validator: (String? v) {
                 final String name = (v ?? '').trim();
                 if (name.isEmpty) {
@@ -522,6 +545,28 @@ class _HeaderDialogState extends State<_HeaderDialog> {
                 return null;
               },
             ),
+            if (_conflict != null) ...<Widget>[
+              const SizedBox(height: Insets.sm),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(width: Insets.xs),
+                  Expanded(
+                    child: Text(
+                      _conflict!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: Insets.md),
             TextFormField(
               controller: _value,

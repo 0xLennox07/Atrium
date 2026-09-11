@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -165,7 +164,7 @@ class EmbyItemDetailScreen extends ConsumerWidget {
                         child: Stack(
                           children: <Widget>[
                             Positioned.fill(
-                              child: CachedNetworkImage(
+                              child: AtriumNetworkImage(
                                 key: ValueKey<String>(backdropUrl),
                                 imageUrl: backdropUrl,
                                 fit: BoxFit.cover,
@@ -349,7 +348,7 @@ class _Header extends StatelessWidget {
                 if (posterUrl != null)
                   ClipRRect(
                     borderRadius: Radii.card,
-                    child: CachedNetworkImage(
+                    child: AtriumNetworkImage(
                       key: ValueKey<String>(posterUrl),
                       imageUrl: posterUrl,
                       width: 140,
@@ -539,7 +538,7 @@ class _PeopleRow extends StatelessWidget {
                     CircleAvatar(
                       radius: 50,
                       backgroundImage: personImageUrl != null
-                          ? CachedNetworkImageProvider(personImageUrl)
+                          ? atriumImageProvider(personImageUrl)
                           : null,
                       child: personImageUrl == null
                           ? const Icon(Icons.person, size: 40)
@@ -635,7 +634,7 @@ class _SeasonsGrid extends ConsumerWidget {
                         child: ClipRRect(
                           borderRadius: Radii.card,
                           child: posterUrl != null
-                              ? CachedNetworkImage(
+                              ? AtriumNetworkImage(
                                   imageUrl: posterUrl,
                                   fit: BoxFit.cover,
                                 )

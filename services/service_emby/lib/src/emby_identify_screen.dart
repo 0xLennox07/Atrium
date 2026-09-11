@@ -238,6 +238,7 @@ class _EmbyIdentifyScreenState extends ConsumerState<EmbyIdentifyScreen> {
                     leading: res.imageUrl != null
                         ? Image.network(
                             res.imageUrl!,
+                            headers: ArtworkHeaders.forUrl(res.imageUrl!),
                             width: 40,
                             height: 60,
                             fit: BoxFit.cover,

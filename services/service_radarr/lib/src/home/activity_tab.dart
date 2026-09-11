@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -492,7 +491,7 @@ class _QueueCard extends ConsumerWidget {
                   width: 50,
                   height: 75,
                   child: posterUrl != null
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: posterUrl,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
@@ -1201,7 +1200,7 @@ class _HistoryCard extends ConsumerWidget {
                   width: 40,
                   height: 60,
                   child: posterUrl != null
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: posterUrl,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
@@ -1369,7 +1368,7 @@ class _GroupedHistoryCardState extends ConsumerState<_GroupedHistoryCard> {
                       width: 36,
                       height: 54,
                       child: posterUrl != null
-                          ? CachedNetworkImage(
+                          ? AtriumNetworkImage(
                               imageUrl: posterUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
@@ -1714,7 +1713,7 @@ class _BlocklistCard extends ConsumerWidget {
                   width: 40,
                   height: 60,
                   child: posterUrl != null
-                      ? CachedNetworkImage(
+                      ? AtriumNetworkImage(
                           imageUrl: posterUrl,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
@@ -1909,7 +1908,7 @@ class _GroupedBlocklistCardState extends ConsumerState<_GroupedBlocklistCard> {
                         fit: StackFit.expand,
                         children: [
                           posterUrl != null
-                              ? CachedNetworkImage(
+                              ? AtriumNetworkImage(
                                   imageUrl: posterUrl,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(

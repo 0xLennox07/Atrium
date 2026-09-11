@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_router/core_router.dart';
 import 'package:core_ui/core_ui.dart';
@@ -309,7 +308,7 @@ class _DashboardRecentlyDownloadedWidgetState
                         child: InkWell(
                           onTap: () => _openDetail(context, item),
                           child: item.posterUrl != null
-                              ? CachedNetworkImage(
+                              ? AtriumNetworkImage(
                                   imageUrl: item.posterUrl!,
                                   fit: BoxFit.cover,
                                   errorWidget: (_, __, ___) => Icon(

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +78,7 @@ class JellyfinSeasonScreen extends ConsumerWidget {
                       if (seasonImageUrl != null)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: CachedNetworkImage(
+                          child: AtriumNetworkImage(
                             imageUrl: seasonImageUrl!,
                             width: 120,
                             height: 180,

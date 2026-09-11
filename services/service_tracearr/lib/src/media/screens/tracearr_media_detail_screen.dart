@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -224,14 +223,14 @@ class _TracearrMediaDetailScreenState
                     children: [
                       if (effectivePosterUrl != null &&
                           effectivePosterUrl.isNotEmpty)
-                        CachedNetworkImage(
+                        AtriumNetworkImage(
                           imageUrl: effectivePosterUrl,
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) {
                             if (heroFallbackPoster != null &&
                                 heroFallbackPoster.isNotEmpty &&
                                 heroFallbackPoster != effectivePosterUrl) {
-                              return CachedNetworkImage(
+                              return AtriumNetworkImage(
                                 imageUrl: heroFallbackPoster,
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) =>
@@ -243,7 +242,7 @@ class _TracearrMediaDetailScreenState
                         )
                       else if (heroFallbackPoster != null &&
                           heroFallbackPoster.isNotEmpty)
-                        CachedNetworkImage(
+                        AtriumNetworkImage(
                           imageUrl: heroFallbackPoster,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) =>

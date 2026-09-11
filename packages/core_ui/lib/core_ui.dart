@@ -10,12 +10,14 @@ library;
 export 'package:easy_refresh/easy_refresh.dart' hide EasyRefresh, HeaderLocator;
 export 'package:flex_color_scheme/flex_color_scheme.dart';
 
+export 'src/artwork_headers.dart';
 export 'src/design_tokens.dart';
 export 'src/navigation.dart';
 export 'src/performance_logger.dart';
 export 'src/service_visuals.dart';
 export 'src/theme.dart';
 export 'src/widgets/async_value_view.dart';
+export 'src/widgets/atrium_network_image.dart';
 export 'src/widgets/beta_badge.dart';
 export 'src/widgets/bottom_nav.dart';
 export 'src/widgets/collapsed_title.dart';

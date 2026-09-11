@@ -1,0 +1,12 @@
+Wake machines from the dashboard with a new Wake-on-LAN widget, and adding a
+torrent in qBittorrent now fills in the save path from the server, including
+the path each category defines. The sidebar can be pulled down to refresh
+service health, and keeps it current while open.
+
+Behind a reverse proxy, posters and backdrops now load, headers set for the
+whole profile reach every request including Test connection, and a proxy's
+login page is no longer reported as a working server. Custom headers warn you
+when a header will not survive, and suggest Proxy-Authorization.
+
+Fixed: the Active downloads widget shows what is downloading rather than what
+is queued.

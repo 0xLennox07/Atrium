@@ -9,14 +9,21 @@ this](#why-it-is-like-this) before changing any of it.
 
 ## Cutting a release
 
-1. **Bump the version.** `app/pubspec.yaml` (`version: X.Y.Z+N`), the
-   `appVersion` constant in `app/lib/src/update_check/app_version.dart` (keep it
-   equal to the pubspec `version:`; it is the baseline the update check compares
-   against, and the settings screen shows `$appVersion`, so bumping the constant
-   also updates the displayed version), a new entry in
-   `app/lib/src/screens/changelog_screen.dart`, and a new
-   `fastlane/metadata/android/en-US/changelogs/<N>.txt` named for the build
-   number, not the version.
+1. **Bump the version.** Seven places. Searching the repository for the old
+   version string is the quickest way to be sure none is missed.
+
+   - `app/pubspec.yaml`: `version: X.Y.Z+N`
+   - `app/lib/src/update_check/app_version.dart`: the `appVersion` constant.
+     Keep it equal to the pubspec `version:`. It is the baseline the update
+     check compares against and what the settings screen shows, so bumping it
+     also updates the displayed version. A test holds the two equal.
+   - `app/lib/src/screens/changelog/release_notes.dart`: a new entry at the
+     top of `releaseNotes`
+   - `fastlane/metadata/android/en-US/changelogs/<N>.txt`, named for the build
+     number, not the version
+   - `README.md`: the status line
+   - `.github/ISSUE_TEMPLATE/bug_report.yml`: the version placeholder
+   - `site/src/components/hero.html`: the version chip
 
 2. **Verify.** `flutter analyze` and `flutter test` from `app/`, both clean.
 

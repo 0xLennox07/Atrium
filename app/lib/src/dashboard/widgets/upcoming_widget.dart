@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_router/core_router.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -198,7 +197,7 @@ class _ReleaseBanner extends StatelessWidget {
           fit: StackFit.expand,
           children: <Widget>[
             if (hasArt)
-              CachedNetworkImage(
+              AtriumNetworkImage(
                 imageUrl: backdrop,
                 fit: BoxFit.cover,
                 memCacheWidth: 600,
@@ -231,7 +230,7 @@ class _ReleaseBanner extends StatelessWidget {
                       height: 66,
                       child: poster == null
                           ? _posterFallback(cs)
-                          : CachedNetworkImage(
+                          : AtriumNetworkImage(
                               imageUrl: poster,
                               fit: BoxFit.cover,
                               memCacheWidth: 132,

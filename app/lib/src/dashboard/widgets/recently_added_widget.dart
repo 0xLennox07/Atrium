@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_router/core_router.dart';
 import 'package:core_ui/core_ui.dart';
@@ -240,7 +239,7 @@ class _PosterTile extends StatelessWidget {
                 height: 140,
                 child: (poster == null || poster.isEmpty)
                     ? _posterFallback(cs)
-                    : CachedNetworkImage(
+                    : AtriumNetworkImage(
                         imageUrl: poster,
                         fit: BoxFit.cover,
                         memCacheWidth: 220,

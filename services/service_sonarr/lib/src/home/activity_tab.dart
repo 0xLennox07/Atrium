@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -567,7 +566,7 @@ class _QueueItemCard extends ConsumerWidget {
                     fit: StackFit.expand,
                     children: [
                       posterUrl != null
-                          ? CachedNetworkImage(
+                          ? AtriumNetworkImage(
                               imageUrl: posterUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
@@ -1231,7 +1230,7 @@ class _GroupedHistoryCardState extends ConsumerState<_GroupedHistoryCard> {
                       width: 36,
                       height: 54,
                       child: posterUrl != null
-                          ? CachedNetworkImage(
+                          ? AtriumNetworkImage(
                               imageUrl: posterUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
@@ -1702,7 +1701,7 @@ class _GroupedBlocklistCardState extends ConsumerState<_GroupedBlocklistCard> {
                         fit: StackFit.expand,
                         children: [
                           posterUrl != null
-                              ? CachedNetworkImage(
+                              ? AtriumNetworkImage(
                                   imageUrl: posterUrl,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(

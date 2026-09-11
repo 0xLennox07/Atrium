@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -168,7 +167,7 @@ class _AlbumCard extends StatelessWidget {
     if (imageUrl == null) {
       return fallback;
     }
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
       memCacheWidth: 320,
@@ -232,7 +231,7 @@ class PlexAlbumScreen extends ConsumerWidget {
                       child: Stack(
                         children: <Widget>[
                           Positioned.fill(
-                            child: CachedNetworkImage(
+                            child: AtriumNetworkImage(
                               imageUrl: albumImageUrl,
                               fit: BoxFit.cover,
                             ),
@@ -351,7 +350,7 @@ class PlexAlbumScreen extends ConsumerWidget {
           if (albumImageUrl != null)
             ClipRRect(
               borderRadius: Radii.card,
-              child: CachedNetworkImage(
+              child: AtriumNetworkImage(
                 imageUrl: albumImageUrl,
                 width: 140,
                 height: 140,

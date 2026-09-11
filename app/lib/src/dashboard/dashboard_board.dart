@@ -30,6 +30,7 @@ import 'widgets/recently_downloaded_widget.dart';
 import 'widgets/requests_widget.dart';
 import 'widgets/server_info_widget.dart';
 import 'widgets/speedtest_results_widget.dart';
+import 'widgets/wake_on_lan_widget.dart';
 import 'widgets/streams_widget.dart';
 import 'widgets/upcoming_widget.dart';
 
@@ -49,6 +50,8 @@ class DashboardBoard extends ConsumerWidget {
     final List<DashboardWidgetConfig> layout =
         ref.watch(dashboardLayoutProvider);
     final bool editing = ref.watch(dashboardEditModeProvider);
+    final int wolCount =
+        ref.watch(activeProfileProvider)?.wolDevices.length ?? 0;
 
     if (editing) {
       return _EditBoard(layout: layout, instances: instances);
@@ -57,7 +60,7 @@ class DashboardBoard extends ConsumerWidget {
     final List<DashboardWidgetConfig> visible = <DashboardWidgetConfig>[
       for (final DashboardWidgetConfig c in layout)
         if (c.enabled &&
-            _configured(c.kind, instances) &&
+            _configured(c.kind, instances, wolDeviceCount: wolCount) &&
             _hasLiveContent(ref, c.kind))
           c,
     ];
@@ -91,7 +94,20 @@ class DashboardBoard extends ConsumerWidget {
     );
   }
 
-  static bool _configured(DashboardWidgetKind kind, List<Instance> instances) {
+  /// Whether a widget has anything behind it to show.
+  ///
+  /// Almost every widget is answered by a service, so having one configured is
+  /// the test. Wake-on-LAN is not: it points at machines rather than servers,
+  /// so it is set up once a device exists on the profile, and the usual test
+  /// would call it unconfigured forever.
+  static bool _configured(
+    DashboardWidgetKind kind,
+    List<Instance> instances, {
+    int wolDeviceCount = 0,
+  }) {
+    if (kind.isDeviceBacked) {
+      return wolDeviceCount > 0;
+    }
     return instances.any((Instance i) => kind.serviceKinds.contains(i.kind));
   }
 
@@ -155,10 +171,13 @@ class DashboardBoard extends ConsumerWidget {
         return DashboardSpeedtestResultsWidget(
           instances: _byKind(instances, ServiceKind.speedtestTracker),
         );
+      case DashboardWidgetKind.wakeOnLan:
+        return const DashboardWakeOnLanWidget();
     }
   }
 
   void _refreshAll(WidgetRef ref, List<Instance> instances) {
+    ref.read(lastHealthRefreshProvider.notifier).markRefreshed();
     for (final Instance i in instances) {
       ref.invalidate(instanceHealthProvider(i.id));
       switch (i.kind) {
@@ -220,6 +239,8 @@ class _EditBoard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final int wolCount =
+        ref.watch(activeProfileProvider)?.wolDevices.length ?? 0;
     final List<DashboardWidgetConfig> enabled = <DashboardWidgetConfig>[
       for (final DashboardWidgetConfig c in layout)
         if (c.enabled) c,
@@ -258,17 +279,26 @@ class _EditBoard extends ConsumerWidget {
                       child: _EditTile(
                         config: c,
                         instances: instances,
+                        wolDeviceCount: wolCount,
                         // Showing a widget nothing feeds puts it back on a
                         // board that filters it straight out again, which
                         // reads as the button having failed. The tile says
                         // which service it wants instead.
                         trailing: IconButton(
-                          tooltip: DashboardBoard._configured(c.kind, instances)
+                          tooltip: DashboardBoard._configured(
+                            c.kind,
+                            instances,
+                            wolDeviceCount: wolCount,
+                          )
                               ? 'Show widget'
-                              : 'Needs a service that can fill it',
+                              : 'Needs something that can fill it',
                           icon: const Icon(Icons.add_circle_outline),
                           onPressed:
-                              DashboardBoard._configured(c.kind, instances)
+                              DashboardBoard._configured(
+                            c.kind,
+                            instances,
+                            wolDeviceCount: wolCount,
+                          )
                                   ? () => ref
                                       .read(dashboardLayoutProvider.notifier)
                                       .setEnabled(c.kind, true)
@@ -319,6 +349,9 @@ class _EditBoard extends ConsumerWidget {
 /// the whole reason a widget that can never fill looked broken rather than
 /// unavailable.
 String _needsLabel(DashboardWidgetKind kind) {
+  if (kind.isDeviceBacked) {
+    return 'Needs a device';
+  }
   final List<String> names = <String>[
     for (final ServiceKind k in kind.serviceKinds) k.displayName,
   ];
@@ -333,17 +366,26 @@ class _EditTile extends StatelessWidget {
     required this.config,
     required this.instances,
     required this.trailing,
+    this.wolDeviceCount = 0,
   });
 
   final DashboardWidgetConfig config;
   final List<Instance> instances;
   final Widget trailing;
 
+  /// Wake-on-LAN is set up by adding devices, not a service, so its tile needs
+  /// the device count to know whether it is configured.
+  final int wolDeviceCount;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme cs = theme.colorScheme;
-    final bool configured = DashboardBoard._configured(config.kind, instances);
+    final bool configured = DashboardBoard._configured(
+      config.kind,
+      instances,
+      wolDeviceCount: wolDeviceCount,
+    );
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: Insets.md,

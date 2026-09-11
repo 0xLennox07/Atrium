@@ -335,14 +335,27 @@ class QbittorrentClient {
         );
       });
 
-  /// All category names defined on the server (sorted).
-  Future<List<String>> getCategories() => _guarded(() async {
+  /// Every category on the server, mapped to the save path it defines.
+  ///
+  /// A category is free to define no path of its own, which comes back as an
+  /// empty string and means the server's global default applies. Note the key
+  /// is `savePath` here while the same idea is `save_path` in
+  /// `app/preferences`; qBittorrent is inconsistent between the two endpoints,
+  /// so both spellings are accepted.
+  Future<Map<String, String>> getCategories() => _guarded(() async {
         final Response<dynamic> resp =
             await _dio.get<dynamic>('api/v2/torrents/categories');
         final Map<String, dynamic> map =
             (resp.data as Map<String, dynamic>?) ?? <String, dynamic>{};
-        final List<String> names = map.keys.toList()..sort();
-        return names;
+        final Map<String, String> paths = <String, String>{};
+        for (final MapEntry<String, dynamic> e in map.entries) {
+          final dynamic v = e.value;
+          final Object? raw = v is Map<String, dynamic>
+              ? (v['savePath'] ?? v['save_path'])
+              : null;
+          paths[e.key] = raw?.toString() ?? '';
+        }
+        return paths;
       });
 
   /// Moves a torrent into [category] (empty string clears it).

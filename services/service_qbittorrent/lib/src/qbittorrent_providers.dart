@@ -428,16 +428,31 @@ final qbitTransferProvider =
   return client.getTransferInfo();
 });
 
-/// Category names defined on an instance. Fetched on demand (no polling -
-/// categories rarely change).
-final qbitCategoriesProvider =
-    FutureProvider.autoDispose.family<List<String>, Instance>((
+/// Categories on an instance mapped to the save path each defines, empty
+/// where a category leaves it to the server default. Fetched on demand (no
+/// polling - categories rarely change).
+final qbitCategoryPathsProvider =
+    FutureProvider.autoDispose.family<Map<String, String>, Instance>((
   Ref ref,
   Instance instance,
 ) async {
   final QbittorrentClient client =
       await ref.watch(qbittorrentClientProvider(instance).future);
   return client.getCategories();
+});
+
+/// Category names defined on an instance (sorted).
+///
+/// Derived from [qbitCategoryPathsProvider] rather than fetching again, so the
+/// callers that only want names cost no extra request.
+final qbitCategoriesProvider =
+    FutureProvider.autoDispose.family<List<String>, Instance>((
+  Ref ref,
+  Instance instance,
+) async {
+  final Map<String, String> paths =
+      await ref.watch(qbitCategoryPathsProvider(instance).future);
+  return paths.keys.toList()..sort();
 });
 
 /// Tag names defined on an instance. Fetched on demand for the tag picker.

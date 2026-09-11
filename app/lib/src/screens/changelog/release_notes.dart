@@ -27,6 +27,26 @@ class ReleaseNote {
 /// Newest first. Update alongside appVersion and the pubspec at each release.
 const List<ReleaseNote> releaseNotes = <ReleaseNote>[
   ReleaseNote(
+    version: '1.6.1',
+    date: '2026-09-11',
+    groups: <ChangeGroup>[
+      ChangeGroup(ChangeCategory.added, <String>[
+        'A Wake-on-LAN widget for the dashboard. The machines you have set up can be woken with one tap from the board, without going into settings to find them. It tells you the magic packet was sent rather than that the machine woke, since nothing answers one and a machine takes a while to come up.',
+        'Adding a torrent in qBittorrent fills in the save path from the server, using its default location or the path the chosen category defines, so it no longer has to be typed out for every torrent.',
+        'The sidebar can be pulled down to refresh the health of every service. It also checks again when you open it if the last check is more than a minute old, and keeps them current every 30 seconds while it stays open.',
+      ]),
+      ChangeGroup(ChangeCategory.improved, <String>[
+        'Custom headers warn you when a header will not survive the trip. Several services use Authorization for their own sign-in and overwrite yours, and qBittorrent refuses one it did not issue, so the warning names the affected services and suggests Proxy-Authorization, which works wherever your proxy accepts it.',
+        'The health check no longer mistakes the login page of a reverse proxy for a working server. It used to follow the redirect to a sign-in page, get a normal answer back, and report the service as online. It now recognises a login page and shows a warning instead.',
+      ]),
+      ChangeGroup(ChangeCategory.fixed, <String>[
+        'Posters and backdrops load behind a reverse proxy. Artwork never carried your custom headers, so behind Authelia, Cloudflare Access or similar every image was refused and came up blank while the rest of the app worked.',
+        'Headers set for the whole profile now reach every request. Test connection, the health dot on each service, and the Beszel, dashdot and Glances clients all dropped them, which is why Test connection could fail while the app itself worked fine.',
+        'The Active downloads widget shows what is actually downloading. It sorted purely by progress, so a queue of nearly finished torrents could push the one live download off the card.',
+      ]),
+    ],
+  ),
+  ReleaseNote(
     version: '1.6.0',
     date: '2026-08-30',
     groups: <ChangeGroup>[

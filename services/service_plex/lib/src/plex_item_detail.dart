@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +48,7 @@ class _PlexItemDetailScreenState extends ConsumerState<PlexItemDetailScreen> {
 
     // maximumColorCount is left at its default of 16.
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
       timeout: Duration.zero,
     ).then((PaletteGenerator palette) {
@@ -253,7 +252,7 @@ class _BackdropHeader extends StatelessWidget {
       child: Stack(
         children: <Widget>[
           Positioned.fill(
-            child: CachedNetworkImage(
+            child: AtriumNetworkImage(
               key: ValueKey<String>(backdropUrl!),
               imageUrl: backdropUrl!,
               fit: BoxFit.cover,
@@ -324,7 +323,7 @@ class _Header extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: posterUrl != null
-                  ? CachedNetworkImage(
+                  ? AtriumNetworkImage(
                       imageUrl: posterUrl,
                       width: 140,
                       height: 210,
@@ -566,7 +565,7 @@ class _CastRow extends StatelessWidget {
                       CircleAvatar(
                         radius: 50,
                         backgroundImage: image != null
-                            ? CachedNetworkImageProvider(image)
+                            ? atriumImageProvider(image)
                             : null,
                         child: image == null
                             ? const Icon(Icons.person, size: 40)

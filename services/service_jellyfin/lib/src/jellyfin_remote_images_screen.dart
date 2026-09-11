@@ -215,7 +215,7 @@ class _JellyfinRemoteImagesScreenState
                     borderRadius: Radii.card,
                     child: ClipRRect(
                       borderRadius: Radii.card,
-                      child: CachedNetworkImage(
+                      child: AtriumNetworkImage(
                         imageUrl: url,
                         fit: BoxFit.cover,
                         placeholder: (BuildContext context, String url) =>

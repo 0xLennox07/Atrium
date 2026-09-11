@@ -21,14 +21,27 @@ import 'rate_limit_interceptor.dart';
 ///
 /// The returned client is owned by the caller - close it when done with it.
 class DioFactory {
-  DioFactory({required ConnectionResolver resolver}) : _resolver = resolver;
+  DioFactory({
+    required ConnectionResolver resolver,
+    Map<String, String> globalHeaders = const <String, String>{},
+  })  : _resolver = resolver,
+        _globalHeaders = globalHeaders;
 
   final ConnectionResolver _resolver;
 
-  Future<Dio> create(
-    Instance instance, {
-    Map<String, String> globalHeaders = const <String, String>{},
-  }) async {
+  /// The active profile's headers, held here rather than taken per call.
+  ///
+  /// It used to be an optional argument to [create] defaulting to none, which
+  /// read as harmless and was not: five of the six call sites never passed it,
+  /// so the health probe, the connection tester and the Beszel, dashdot and
+  /// Glances clients all silently dropped the profile's headers while the rest
+  /// of the app sent them. Anyone behind a forward-auth proxy who configured
+  /// headers globally, which is the obvious place to put them when the proxy
+  /// fronts everything, got a working app whose "Test connection" failed.
+  /// Holding them on the factory means a caller cannot forget.
+  final Map<String, String> _globalHeaders;
+
+  Future<Dio> create(Instance instance) async {
     final Uri resolvedUrl = await _resolver.resolve(instance);
     final String baseUrlStr = resolvedUrl.toString();
     final String baseUrl =
@@ -49,7 +62,7 @@ class DioFactory {
     // collision. The AuthInterceptor below still wins last for its own keys
     // because it runs per-request.
     dio.options.headers
-        .addAll(mergeHeaders(globalHeaders, instance.customHeaders));
+        .addAll(mergeHeaders(_globalHeaders, instance.customHeaders));
 
     if (instance.allowSelfSignedCerts) {
       // The user has explicitly chosen to skip cert validation for this

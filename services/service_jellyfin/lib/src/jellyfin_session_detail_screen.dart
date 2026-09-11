@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -41,7 +40,7 @@ class _JellyfinSessionDetailScreenState
     _lastPosterUrl = posterUrl;
 
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
     ).then((PaletteGenerator palette) {
       if (mounted) {
@@ -144,7 +143,7 @@ class _JellyfinSessionDetailScreenState
             // Background blurred image
             if (session.posterUrl != null)
               Image(
-                image: CachedNetworkImageProvider(session.posterUrl!),
+                image: atriumImageProvider(session.posterUrl!),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) =>
                     Container(color: theme.colorScheme.surface),
@@ -307,7 +306,7 @@ class _JellyfinSessionDetailScreenState
                                     ],
                                     image: session.posterUrl != null
                                         ? DecorationImage(
-                                            image: CachedNetworkImageProvider(
+                                            image: atriumImageProvider(
                                               session.posterUrl!,
                                             ),
                                             fit: BoxFit.cover,

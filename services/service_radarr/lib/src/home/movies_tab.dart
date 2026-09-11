@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
@@ -698,7 +697,7 @@ class _MovieBannerCard extends ConsumerWidget {
             children: <Widget>[
               if (bannerUrl != null)
                 Positioned.fill(
-                  child: CachedNetworkImage(
+                  child: AtriumNetworkImage(
                     imageUrl: bannerUrl,
                     fit: BoxFit.cover,
                     alignment: Alignment.centerRight,
@@ -764,7 +763,7 @@ class _MovieBannerCard extends ConsumerWidget {
                       child: posterUrl != null
                           ? Hero(
                               tag: 'movie-poster-${movie.id}',
-                              child: CachedNetworkImage(
+                              child: AtriumNetworkImage(
                                 imageUrl: posterUrl,
                                 fit: BoxFit.cover,
                                 memCacheWidth: 500,
@@ -872,7 +871,7 @@ class _Poster extends StatelessWidget {
     if (imageUrl == null) {
       return fallback;
     }
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
       memCacheWidth: 500,

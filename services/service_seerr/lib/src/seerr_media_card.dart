@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
@@ -48,7 +47,7 @@ class SeerrMediaCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: <Widget>[
                     if (api?.imageUrl(item.posterPath) != null)
-                      CachedNetworkImage(
+                      AtriumNetworkImage(
                         imageUrl: api!.imageUrl(item.posterPath)!,
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => const _PosterFallback(),
@@ -219,7 +218,7 @@ class SeerrRequestCard extends StatelessWidget {
         children: <Widget>[
           if (api?.imageUrl(backdrop, size: 'w780') != null)
             Positioned.fill(
-              child: CachedNetworkImage(
+              child: AtriumNetworkImage(
                 imageUrl: api!.imageUrl(backdrop, size: 'w780')!,
                 fit: BoxFit.cover,
                 errorWidget: (_, __, ___) => const SizedBox.shrink(),
@@ -315,7 +314,7 @@ class SeerrRequestCard extends StatelessWidget {
                         width: 76,
                         height: 114,
                         child: api?.imageUrl(item.posterPath) != null
-                            ? CachedNetworkImage(
+                            ? AtriumNetworkImage(
                                 imageUrl: api!.imageUrl(item.posterPath)!,
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) =>

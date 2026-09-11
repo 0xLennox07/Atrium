@@ -3,6 +3,7 @@ import 'package:core_networking/core_networking.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('proxy interception', _interceptionTests);
   group('Unraid GraphQL health', () {
     test('a query that actually ran is online', () {
       expect(
@@ -90,5 +91,99 @@ void main() {
         );
       }
     });
+  });
+}
+
+// ---
+
+/// A forward-auth proxy answering instead of the service.
+///
+/// Reproduced against real Authelia behind nginx: an unauthenticated probe is
+/// redirected to the login portal, the client follows it, and the portal
+/// answers 200 with text/html. Every health endpoint here speaks JSON or
+/// XML-RPC, so a page is proof the service never saw the request.
+void _interceptionTests() {
+  const String html = 'text/html; charset=utf-8';
+  const String json = 'application/json';
+
+  test('a 200 page is not a healthy service', () {
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.sonarr, 200, '<!--SPDX--><!DOCTYPE html>',
+        contentType: html,
+      ),
+      Health.warning,
+    );
+  });
+
+  test('it applies to the public-endpoint services too', () {
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.jellyfin, 200, '<html>', contentType: html,
+      ),
+      Health.warning,
+    );
+  });
+
+  test('and to the ones judged only on reachability', () {
+    // qBittorrent is called healthy on any answer at all, which would happily
+    // accept a login portal.
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.qbittorrent, 200, '<html>', contentType: html,
+      ),
+      Health.warning,
+    );
+  });
+
+  test('a real json answer is still healthy', () {
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.sonarr, 200, <String, dynamic>{'version': '4.0'},
+        contentType: json,
+      ),
+      Health.ok,
+    );
+  });
+
+  test('transmission answering 409 with a page is left alone', () {
+    // Its own conflict response is markup and means the daemon is up. Only
+    // 2xx is treated as an interception for exactly this reason.
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.transmission, 409, '<h1>409: Conflict</h1>',
+        contentType: html,
+      ),
+      Health.ok,
+    );
+  });
+
+  test('rtorrent answering 502 with a page is left alone', () {
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.rtorrent, 502, '<html>502</html>', contentType: html,
+      ),
+      Health.warning,
+    );
+  });
+
+  test('rtorrent xml-rpc is not mistaken for a page', () {
+    // XML-RPC opens with a tag too, which is why this reads the content type
+    // rather than sniffing the body.
+    expect(
+      interpretServiceHealthResponse(
+        ServiceKind.rtorrent, 200,
+        '<?xml version="1.0"?><methodResponse></methodResponse>',
+        contentType: 'text/xml',
+      ),
+      Health.ok,
+    );
+  });
+
+  test('no content type at all changes nothing', () {
+    expect(
+      interpretServiceHealthResponse(ServiceKind.sonarr, 200, <String, dynamic>{}),
+      Health.ok,
+    );
   });
 }

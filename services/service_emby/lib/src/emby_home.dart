@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_models/core_models.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
@@ -845,7 +844,7 @@ class EmbyPosterCard extends ConsumerWidget {
     if (imageUrl == null) {
       return fallback;
     }
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
       memCacheWidth: 300,
@@ -1031,7 +1030,7 @@ class EmbyBannerCard extends ConsumerWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: <Widget>[
-                        CachedNetworkImage(
+                        AtriumNetworkImage(
                           imageUrl: (backdropUrl ?? imageUrl)!,
                           fit: BoxFit.cover,
                           alignment: Alignment.topCenter,
@@ -1195,7 +1194,7 @@ class EmbyBannerCard extends ConsumerWidget {
     if (imageUrl == null) {
       return fallback;
     }
-    return CachedNetworkImage(
+    return AtriumNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
       placeholder: (BuildContext context, String url) => Container(
@@ -1512,7 +1511,7 @@ class _SessionCardState extends State<_SessionCard> {
     _lastPosterUrl = posterUrl;
 
     PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
+      atriumImageProvider(posterUrl, maxWidth: 200, maxHeight: 300),
       size: const Size(200, 300),
     ).then((PaletteGenerator palette) {
       if (mounted) {
@@ -1572,6 +1571,7 @@ class _SessionCardState extends State<_SessionCard> {
                     children: <Widget>[
                       Image.network(
                         session.posterUrl!,
+                        headers: ArtworkHeaders.forUrl(session.posterUrl!),
                         fit: BoxFit.cover,
                         alignment: Alignment.topCenter,
                         errorBuilder: (_, __, ___) => const SizedBox.shrink(),
@@ -1622,7 +1622,7 @@ class _SessionCardState extends State<_SessionCard> {
                             ],
                             image: session.posterUrl != null
                                 ? DecorationImage(
-                                    image: CachedNetworkImageProvider(
+                                    image: atriumImageProvider(
                                       session.posterUrl!,
                                     ),
                                     fit: BoxFit.cover,

@@ -98,6 +98,7 @@ class _SeerrGenrePosterCard extends ConsumerWidget {
                   child: posterUrl != null
                       ? Image.network(
                           posterUrl,
+                          headers: ArtworkHeaders.forUrl(posterUrl),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const _Placeholder(),
                         )
